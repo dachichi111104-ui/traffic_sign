@@ -27,7 +27,9 @@ def get_cnn_model():
     global _CNN_MODEL
     if _CNN_MODEL is None:
         if not CNN_MODEL_PATH.exists():
-            raise FileNotFoundError(f"CNN model not found at {CNN_MODEL_PATH}. Please train the model first.")
+            logger.warning(f"CNN model not found at {CNN_MODEL_PATH}. Auto-training model for deployment...")
+            from src.train_cnn import train_cnn
+            train_cnn(retrain=True)
         logger.info(f"Loading CNN model from {CNN_MODEL_PATH}")
         _CNN_MODEL = tf.keras.models.load_model(CNN_MODEL_PATH)
     return _CNN_MODEL
@@ -37,7 +39,9 @@ def get_svm_model():
     global _SVM_MODEL
     if _SVM_MODEL is None:
         if not SVM_MODEL_PATH.exists():
-            raise FileNotFoundError(f"SVM model not found at {SVM_MODEL_PATH}. Please train the baseline model first.")
+            logger.warning(f"SVM model not found at {SVM_MODEL_PATH}. Auto-training baseline model for deployment...")
+            from src.train_svm import train_svm_baseline
+            train_svm_baseline()
         logger.info(f"Loading SVM model from {SVM_MODEL_PATH}")
         _SVM_MODEL = joblib.load(SVM_MODEL_PATH)
     return _SVM_MODEL

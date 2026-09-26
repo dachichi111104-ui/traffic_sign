@@ -57,7 +57,7 @@ with nav_tabs[0]:
     render_hero_banner(
         title="Hệ Thống Phân Loại Biển Báo Giao Thông Đường Bộ Tự Động",
         subtitle="Nền tảng Trí tuệ Nhân tạo nhận diện biển báo chuẩn GTSRB dựa trên Machine Learning (HOG + SVM) và Deep Learning (CNN TensorFlow).",
-        badge_text="KHOA CÔNG NGHỆ THÔNG TIN / ĐIỆN ĐIỆN TỬ — HỌC PHẦN MÁY HỌC"
+        badge_text="KHOA CÔNG NGHỆ THÔNG TIN — HỌC PHẦN MÁY HỌC"
     )
 
     dataset_path, is_sample = find_dataset_dir()

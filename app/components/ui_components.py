@@ -229,7 +229,7 @@ def render_top_header():
         <div class="top-header-bar">
             <div>
                 <div class="top-header-logo">SIGANGE — TRAFFIC SIGN RECOGNITION</div>
-                <div class="top-header-sublogo">KHOA CÔNG NGHỆ THÔNG TIN / ĐIỆN ĐIỆN TỬ — HỌC PHẦN MÁY HỌC</div>
+                <div class="top-header-sublogo">KHOA CÔNG NGHỆ THÔNG TIN — HỌC PHẦN MÁY HỌC</div>
             </div>
             <div class="top-header-user">
                 BÁO CÁO DỰ ÁN MÁY HỌC

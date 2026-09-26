@@ -1,0 +1,12 @@
+{
+    "model": "HOG + SVM",
+    "accuracy": 0.9696,
+    "precision_weighted": 0.9698,
+    "recall_weighted": 0.9696,
+    "f1_score_weighted": 0.9695,
+    "precision_macro": 0.9813,
+    "recall_macro": 0.9747,
+    "f1_score_macro": 0.9778,
+    "num_test_samples": 5882,
+    "is_sample_dataset": false
+}

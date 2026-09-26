@@ -16,11 +16,8 @@ data/raw/*
 data/processed/*
 !data/sample/**
 data/*.db
-models/*.pkl
-models/*.h5
-models/*.keras
-results/*.png
-results/*.json
+!models/*
+!results/*
 
 # IDE & OS
 .vscode/

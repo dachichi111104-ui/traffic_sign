@@ -132,5 +132,5 @@ git push -u origin main
 
 ## 👨‍💻 TÁC GIẢ & THÔNG TIN HỌC PHẦN
 - **Đồ án môn học**: Máy học (Machine Learning)
-- **Khoa**: Công nghệ Thông tin / Điện - Điện tử
+- **Khoa**: Công nghệ Thông tin
 - **Năm học**: 2025 - 2026
