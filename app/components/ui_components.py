@@ -172,18 +172,30 @@ def apply_custom_theme():
                 visibility: hidden !important;
             }
 
-            /* Streamlit Tabs Container & Tab Pill Styling */
-            html body .stApp .stTabs [data-baseweb="tab-list"] {
+            /* Streamlit Tabs Container & 100% Full Pill Navigation Styling */
+            html body .stApp .stTabs [data-baseweb="tab-list"],
+            html body .stApp div[data-testid="stTabs"] [data-baseweb="tab-list"] {
                 gap: 8px !important;
                 background-color: transparent !important;
                 padding-bottom: 6px !important;
                 border-bottom: none !important;
             }
 
-            html body .stApp .stTabs [data-baseweb="tab"] {
+            html body .stApp .stTabs [data-baseweb="tab"],
+            html body .stApp .stTabs button,
+            html body .stApp .stTabs [role="tab"],
+            html body .stApp div[data-testid="stTabs"] button,
+            html body .stApp div[data-testid="stTabs"] [data-baseweb="tab"],
+            html body .stApp div[data-testid="stTabs"] [role="tab"],
+            html body .stApp button[data-baseweb="tab"],
+            html body .stApp button[role="tab"] {
                 background-color: #FFFFFF !important;
                 border: 1px solid #E2E8F0 !important;
                 border-radius: 9999px !important;
+                border-top-left-radius: 9999px !important;
+                border-top-right-radius: 9999px !important;
+                border-bottom-left-radius: 9999px !important;
+                border-bottom-right-radius: 9999px !important;
                 padding: 8px 22px !important;
                 font-size: 0.88rem !important;
                 font-weight: 600 !important;
@@ -192,25 +204,50 @@ def apply_custom_theme():
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
                 margin-bottom: 2px !important;
                 outline: none !important;
+                overflow: hidden !important;
+                -webkit-border-radius: 9999px !important;
+                -moz-border-radius: 9999px !important;
             }
 
-            html body .stApp .stTabs [data-baseweb="tab"]:hover {
+            html body .stApp .stTabs [data-baseweb="tab"]:hover,
+            html body .stApp .stTabs button:hover,
+            html body .stApp .stTabs [role="tab"]:hover,
+            html body .stApp div[data-testid="stTabs"] button:hover,
+            html body .stApp button[data-baseweb="tab"]:hover {
                 background-color: #ECFDF5 !important;
                 color: #059669 !important;
                 border-color: #A7F3D0 !important;
+                border-radius: 9999px !important;
+                border-top-left-radius: 9999px !important;
+                border-top-right-radius: 9999px !important;
+                border-bottom-left-radius: 9999px !important;
+                border-bottom-right-radius: 9999px !important;
             }
 
-            html body .stApp .stTabs [aria-selected="true"] {
+            html body .stApp .stTabs [aria-selected="true"],
+            html body .stApp .stTabs button[aria-selected="true"],
+            html body .stApp .stTabs [data-baseweb="tab"][aria-selected="true"],
+            html body .stApp div[data-testid="stTabs"] button[aria-selected="true"],
+            html body .stApp div[data-testid="stTabs"] [aria-selected="true"],
+            html body .stApp button[aria-selected="true"] {
                 background-color: #059669 !important;
                 color: #FFFFFF !important;
                 border-color: #059669 !important;
                 font-weight: 700 !important;
                 box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3) !important;
+                border-radius: 9999px !important;
+                border-top-left-radius: 9999px !important;
+                border-top-right-radius: 9999px !important;
+                border-bottom-left-radius: 9999px !important;
+                border-bottom-right-radius: 9999px !important;
             }
 
             html body .stApp .stTabs [aria-selected="true"] p,
             html body .stApp .stTabs [aria-selected="true"] span,
-            html body .stApp .stTabs [aria-selected="true"] div {
+            html body .stApp .stTabs [aria-selected="true"] div,
+            html body .stApp button[aria-selected="true"] p,
+            html body .stApp button[aria-selected="true"] span,
+            html body .stApp button[aria-selected="true"] div {
                 color: #FFFFFF !important;
             }
 
