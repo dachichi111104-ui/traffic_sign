@@ -1,17 +1,17 @@
-# 🚦 TRAFFIC SIGN IMAGE CLASSIFICATION & RECOGNITION (SIGANGE)
+# TRAFFIC SIGN IMAGE CLASSIFICATION & RECOGNITION (SIGANGE)
 
 > **HỌC PHẦN:** MÁY HỌC (MACHINE LEARNING - MALE330863)  
 > **ĐỀ TÀI:** XÂY DỰNG HỆ THỐNG PHÂN LOẠI BIỂN BÁO GIAO THÔNG ĐƯỜNG BỘ DỰA TRÊN MACHINE LEARNING & DEEP LEARNING
 
 ---
 
-## 📌 TỔNG QUAN ĐỒ ÁN (PROJECT OVERVIEW)
+## TỔNG QUAN ĐỒ ÁN (PROJECT OVERVIEW)
 
 Dự án **SIGANGE** là một hệ thống phân loại và nhận diện biển báo giao thông đường bộ tự động toàn diện từ A-Z, tuân thủ nghiêm ngặt quy trình phát triển Machine Learning chuẩn học thuật:
 
 $$\text{DATASET} \longrightarrow \text{EDA} \longrightarrow \text{PREPROCESSING} \longrightarrow \text{FEATURE EXTRACTION} \longrightarrow \text{MODEL TRAINING} \longrightarrow \text{EVALUATION} \longrightarrow \text{WEB APP DEMO}$$
 
-### 🌟 Các Điểm Nổi Bật Kỹ Thuật (Key Features):
+### Các Điểm Nổi Bật Kỹ Thuật (Key Features):
 1. **Tiền Xử Lý Nâng Cao (CLAHE)**: Cân bằng tương phản thích ứng thích nghi trên không gian màu **LAB** (kênh $L$), giúp nhận diện tốt biển báo bị bóng râm, thiếu sáng hoặc chói nắng.
 2. **Chống Rò Rỉ Dữ Liệu (Anti Data Leakage)**: Phân chia tập dữ liệu **Train (70%) / Validation (15%) / Test (15%)** *trước* khi tăng cường dữ liệu (Data Augmentation).
 3. **Mô Hình Đối Chứng (Baseline & Deep Learning)**:
@@ -22,7 +22,7 @@ $$\text{DATASET} \longrightarrow \text{EDA} \longrightarrow \text{PREPROCESSING}
 
 ---
 
-## 📁 CẤU TRÚC THƯ MỤC DỰ ÁN (PROJECT STRUCTURE)
+## CẤU TRÚC THƯ MỤC DỰ ÁN (PROJECT STRUCTURE)
 
 ```text
 sigange/
@@ -57,7 +57,7 @@ sigange/
 
 ---
 
-## 🚀 HƯỚNG DẪN CÀI ĐẶT & CHẠY DEMO CHO THÀNH VIÊN NHÓM
+## HƯỚNG DẪN CÀI ĐẶT & CHẠY DEMO CHO THÀNH VIÊN NHÓM
 
 ### 1. Cài đặt môi trường
 Mở Terminal / PowerShell tại thư mục dự án và chạy các lệnh:
@@ -83,11 +83,11 @@ python -m src.data_loader --create-sample
 # Chạy ứng dụng Web
 streamlit run app/app.py
 ```
-👉 Mở trình duyệt tại đường dẫn `http://localhost:8501`.
+Mở trình duyệt tại đường dẫn `http://localhost:8501`.
 
 ---
 
-## 📊 KẾT QUẢ THỰC NGHIỆM ĐÁNH GIÁ MÔ HÌNH (EXPERIMENTAL RESULTS)
+## KẾT QUẢ THỰC NGHIỆM ĐÁNH GIÁ MÔ HÌNH (EXPERIMENTAL RESULTS)
 
 Đánh giá độc lập trên tập **Test Set (15% - 5,882 ảnh)**:
 
@@ -98,7 +98,7 @@ streamlit run app/app.py
 
 ---
 
-## 🌐 HƯỚNG DẪN PUSH LÊN GITHUB & DEPLOY ONLINE MIỄN PHÍ
+## HƯỚNG DẪN PUSH LÊN GITHUB & DEPLOY ONLINE MIỄN PHÍ
 
 ### Bước 1: Đẩy mã nguồn lên GitHub (Dung lượng siêu nhẹ < 5MB)
 File `.gitignore` đã được cấu hình sẵn để **bỏ qua bộ dữ liệu nặng và các file model lớn**. Bạn chỉ cần đẩy phần mã nguồn nhẹ lên GitHub:
@@ -130,7 +130,7 @@ git push -u origin main
 
 ---
 
-## 👨‍💻 TÁC GIẢ & THÔNG TIN HỌC PHẦN
+## TÁC GIẢ & THÔNG TIN HỌC PHẦN
 - **Đồ án môn học**: Máy học (Machine Learning)
 - **Khoa**: Công nghệ Thông tin
 - **Năm học**: 2025 - 2026

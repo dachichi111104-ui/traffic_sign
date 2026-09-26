@@ -452,15 +452,48 @@ def apply_custom_theme():
                 background-color: #047857 !important;
                 box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
             }
+
+            /* SVG Vector Icon Helper Styling */
+            .top-header-icon svg {
+                width: 24px;
+                height: 24px;
+                stroke: #FFFFFF;
+            }
+            .hero-icon-circle svg {
+                width: 22px;
+                height: 22px;
+                stroke: #059669;
+            }
         </style>
     """, unsafe_allow_html=True)
 
+SVG_ICONS = {
+    # Traffic Warning Sign Icon
+    "traffic": '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    
+    # Target / Prediction Icon
+    "target": '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>',
+    
+    # Dataset / Database Icon
+    "dataset": '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
+    
+    # Metrics / Evaluation Chart Icon
+    "metrics": '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
+    
+    # Model Comparison / Scale Icon
+    "compare": '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/></svg>',
+    
+    # History / Log Icon
+    "history": '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>'
+}
+
 
 def render_top_header():
-    st.markdown("""
+    traffic_svg = SVG_ICONS["traffic"]
+    st.markdown(f"""
         <div class="top-header-bar">
             <div class="top-header-left">
-                <div class="top-header-icon">🚦</div>
+                <div class="top-header-icon">{traffic_svg}</div>
                 <div>
                     <div class="top-header-title-box">
                         <div class="top-header-logo">Sigange<span>-AI</span></div>
@@ -477,11 +510,15 @@ def render_top_header():
     """, unsafe_allow_html=True)
 
 
-def render_hero_banner(title: str, subtitle: str, badge_text: str = "HỆ THỐNG PHÂN LOẠI BIỂN BÁO GIAO THÔNG", icon: str = "🚦", **kwargs):
+def render_hero_banner(title: str, subtitle: str, badge_text: str = "HỆ THỐNG PHÂN LOẠI BIỂN BÁO GIAO THÔNG", icon: str = "traffic", **kwargs):
+    icon_html = SVG_ICONS.get(icon, icon) if icon in SVG_ICONS else (SVG_ICONS.get(kwargs.get('icon_name', ''), icon) if not str(icon).startswith('<svg') else icon)
+    if not icon_html or not str(icon_html).startswith('<svg'):
+        icon_html = SVG_ICONS["traffic"]
+
     st.markdown(f"""
         <div class="hero-container">
             <div class="hero-header-flex">
-                <div class="hero-icon-circle">{icon}</div>
+                <div class="hero-icon-circle">{icon_html}</div>
                 <div>
                     <div class="hero-badge">{badge_text}</div>
                     <div class="hero-title">{title}</div>

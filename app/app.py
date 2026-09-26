@@ -29,7 +29,7 @@ from app.components.ui_components import (
 
 st.set_page_config(
     page_title="SIGANGE — Traffic Sign Classification",
-    page_icon="🚦",
+    page_icon="https://cdn-icons-png.flaticon.com/512/2972/2972531.png",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -58,7 +58,7 @@ with nav_tabs[0]:
         title="Hệ Thống Phân Loại Biển Báo Giao Thông Đường Bộ Tự Động",
         subtitle="Nền tảng Trí tuệ Nhân tạo nhận diện biển báo chuẩn GTSRB dựa trên Machine Learning (HOG + SVM) và Deep Learning (CNN TensorFlow).",
         badge_text="KHOA CÔNG NGHỆ THÔNG TIN — HỌC PHẦN MÁY HỌC",
-        icon="🚦"
+        icon="traffic"
     )
 
     dataset_path, is_sample = find_dataset_dir()
@@ -123,7 +123,7 @@ with nav_tabs[1]:
         title="Nhận Diện & Phân Loại Biển Báo Giao Thông",
         subtitle="Hỗ trợ 3 phương thức đầu vào: Chụp ảnh trực tiếp từ Camera, Tải file ảnh lên (Upload) hoặc Thử nghiệm bộ ảnh ngoài dataset.",
         badge_text="MÔ ĐUN DỰ ĐOÁN THỰC THỜI",
-        icon="🎯"
+        icon="target"
     )
 
     selected_model = st.radio(
@@ -236,7 +236,7 @@ with nav_tabs[1]:
                     else:
                         st.warning("Chưa tự động phát hiện vùng biển báo nổi bật. Bạn có thể sử dụng ảnh gốc hoặc cắt thủ công bên dưới.")
                 
-                with st.expander("✂️ Cắt Ảnh Thủ Công (Chỉnh Vùng Chọn)"):
+                with st.expander("Cắt Ảnh Thủ Công (Chỉnh Vùng Chọn)"):
                     img_np = np.array(up_img.convert("RGB"))
                     h_orig, w_orig = img_np.shape[:2]
                     
@@ -288,7 +288,7 @@ with nav_tabs[2]:
         title="Khám Phá Dữ Liệu Biển Báo Giao Thông (GTSRB)",
         subtitle="Thống kê tổng quan số lượng mẫu, phân bố các lớp, tỷ lệ chia Train / Validation / Test (70% / 15% / 15%) và hình ảnh mẫu.",
         badge_text="DỮ LIỆU & PHÂN BỐ",
-        icon="📊"
+        icon="dataset"
     )
 
     try:
@@ -363,7 +363,7 @@ with nav_tabs[3]:
         title="Đánh Giá Chi Tiết Mô Hình (Model Evaluation)",
         subtitle="Trực quan hóa kết quả thực nghiệm trên tập kiểm thử Test Set độc lập (Accuracy, F1-score, Confusion Matrix, Training Curves & Misclassified Images).",
         badge_text="BÁO CÁO THỰC NGHIỆM",
-        icon="📈"
+        icon="metrics"
     )
 
     if not METRICS_JSON_PATH.exists():
@@ -461,7 +461,7 @@ with nav_tabs[4]:
         title="So Sánh Hiệu Năng Các Mô Hình (Model Comparison)",
         subtitle="Bảng so sánh định lượng và đối chứng hiệu năng thực nghiệm giữa mô hình Baseline (HOG + SVM) và mô hình Deep Learning (CNN).",
         badge_text="BENCHMARK & MODEL SELECTION",
-        icon="⚖️"
+        icon="compare"
     )
 
     if not COMPARISON_CSV_PATH.exists():
@@ -504,7 +504,7 @@ with nav_tabs[5]:
         title="Nhật Ký & Lịch Sử Dự Đoán (SQLite Database)",
         subtitle="Quản lý và tra cứu toàn bộ lịch sử dự đoán được lưu trữ tự động trong cơ sở dữ liệu SQLite.",
         badge_text="DATABASE AUDIT & HISTORY",
-        icon="📜"
+        icon="history"
     )
 
     df_history = get_prediction_history(limit=100)
