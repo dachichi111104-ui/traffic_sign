@@ -4,10 +4,10 @@ import streamlit as st
 
 def apply_custom_theme():
     """
-    Applies SmartRoute-AI (NCKH 2026) inspired UI theme:
-    - Eradicates all Streamlit red/pink tab underlines & borders
-    - Full 9999px Pill Navigation Buttons with Emerald Green active state
-    - Styled Segmented Radio Buttons for Model & Sub-mode Selection
+    Applies SmartRoute-AI (NCKH 2026) inspired UI theme with ultra-high CSS specificity:
+    - Completely eradicates all Streamlit red/pink underline indicators across all shadow DOM trees
+    - Full 9999px Pill Navigation Buttons with Emerald Green active state (#059669)
+    - Styled Segmented Radio Buttons for Model & Input Mode Selection
     - Icon Circle Headers for Hero Banners & Section Cards
     """
     st.markdown("""
@@ -150,57 +150,57 @@ def apply_custom_theme():
             }
 
             /* ERADICATE Streamlit's Default Red/Pink/Orange Active Tab Line & Borders Permanently */
-            div[data-baseweb="tab-highlight-title"],
-            div[data-baseweb="tab-highlight"],
-            div[data-baseweb="tab-border"],
-            [data-baseweb="tab-highlight-title"],
-            [data-baseweb="tab-highlight"],
-            [data-baseweb="tab-border"] {
+            html body .stApp [data-baseweb="tab-highlight-title"],
+            html body .stApp [data-baseweb="tab-border"],
+            html body .stApp [data-baseweb="tab-highlight"],
+            html body .stApp .stTabs [data-baseweb="tab-highlight-title"],
+            html body .stApp .stTabs [data-baseweb="tab-border"],
+            html body .stApp .stTabs [data-baseweb="tab-highlight"],
+            html body .stApp div[data-baseweb="tab-list"]::after,
+            html body .stApp button[data-baseweb="tab"]::after,
+            html body .stApp div[data-baseweb="tab-list"] > div {
                 display: none !important;
                 opacity: 0 !important;
                 height: 0px !important;
                 min-height: 0px !important;
                 max-height: 0px !important;
                 width: 0px !important;
-                background-color: transparent !important;
-                background: transparent !important;
                 border: none !important;
+                border-bottom: none !important;
+                background: transparent !important;
+                background-color: transparent !important;
                 visibility: hidden !important;
             }
 
-            /* Streamlit Tabs Container styling */
-            .stTabs [data-baseweb="tab-list"] {
+            /* Streamlit Tabs Container & Tab Pill Styling */
+            html body .stApp .stTabs [data-baseweb="tab-list"] {
                 gap: 8px !important;
                 background-color: transparent !important;
-                padding-bottom: 8px !important;
+                padding-bottom: 6px !important;
                 border-bottom: none !important;
             }
 
-            .stTabs [data-baseweb="tab-list"] > div {
-                border-bottom: none !important;
-            }
-
-            /* Streamlit Main & Sub Tabs - Full 9999px Pill Shape */
-            .stTabs [data-baseweb="tab"] {
+            html body .stApp .stTabs [data-baseweb="tab"] {
                 background-color: #FFFFFF !important;
                 border: 1px solid #E2E8F0 !important;
                 border-radius: 9999px !important;
-                padding: 8px 20px !important;
+                padding: 8px 22px !important;
                 font-size: 0.88rem !important;
                 font-weight: 600 !important;
                 color: #334155 !important;
                 transition: all 0.2s ease !important;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
-                margin-bottom: 4px !important;
+                margin-bottom: 2px !important;
+                outline: none !important;
             }
 
-            .stTabs [data-baseweb="tab"]:hover {
+            html body .stApp .stTabs [data-baseweb="tab"]:hover {
                 background-color: #ECFDF5 !important;
                 color: #059669 !important;
                 border-color: #A7F3D0 !important;
             }
 
-            .stTabs [aria-selected="true"] {
+            html body .stApp .stTabs [aria-selected="true"] {
                 background-color: #059669 !important;
                 color: #FFFFFF !important;
                 border-color: #059669 !important;
@@ -208,7 +208,9 @@ def apply_custom_theme():
                 box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3) !important;
             }
 
-            .stTabs [aria-selected="true"] span {
+            html body .stApp .stTabs [aria-selected="true"] p,
+            html body .stApp .stTabs [aria-selected="true"] span,
+            html body .stApp .stTabs [aria-selected="true"] div {
                 color: #FFFFFF !important;
             }
 
