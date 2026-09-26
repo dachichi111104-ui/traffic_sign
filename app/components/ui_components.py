@@ -403,7 +403,7 @@ def render_top_header():
     """, unsafe_allow_html=True)
 
 
-def render_hero_banner(title: str, subtitle: str, badge_text: str = "HỆ THỐNG PHÂN LOẠI BIỂN BÁO GIAO THÔNG", icon: str = "🚦"):
+def render_hero_banner(title: str, subtitle: str, badge_text: str = "HỆ THỐNG PHÂN LOẠI BIỂN BÁO GIAO THÔNG", icon: str = "🚦", **kwargs):
     st.markdown(f"""
         <div class="hero-container">
             <div class="hero-header-flex">
