@@ -504,10 +504,6 @@ def render_top_header():
                     <div class="top-header-sublogo">Hệ thống Nhận diện & Phân loại Biển báo Giao thông Tự động</div>
                 </div>
             </div>
-            <div class="top-header-right">
-                <div class="status-badge-yellow">Ghi chú học thuật</div>
-                <div class="status-badge-green"><span class="status-dot"></span> AI Engine Ready</div>
-            </div>
         </div>
     """, unsafe_allow_html=True)
 
