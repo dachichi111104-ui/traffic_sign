@@ -42,12 +42,12 @@ render_top_header()
 
 # 2. Main Top Navigation Bar (No Emojis)
 nav_tabs = st.tabs([
-    "Trang Chủ (Dashboard)",
-    "Phân Loại & Camera",
-    "Khám Phá Dataset",
-    "Đánh Giá Mô Hình",
-    "So Sánh Mô Hình",
-    "Nhật Ký Dự Đoán"
+    "1. Tổng quan & Dashboard",
+    "2. Nhận diện & Camera",
+    "3. Khám phá Dữ liệu",
+    "4. Đánh giá Mô hình",
+    "5. So sánh Thực nghiệm",
+    "6. Nhật ký Dự đoán"
 ])
 
 # ==========================================

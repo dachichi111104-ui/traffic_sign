@@ -4,19 +4,19 @@ import streamlit as st
 
 def apply_custom_theme():
     """
-    Applies custom high-end Academic & Professional CSS styling:
-    - Hides default Streamlit sidebar completely to match top-header web apps (ProjectHub / FoodGo)
-    - Deep Navy Header (#0F172A to #1E3A8A)
-    - Clean Sans-Serif typography (Inter)
-    - Soft Shadow Cards with Accent Borders
-    - ZERO EMOJIS, pure professional presentation
+    Applies SmartRoute-AI (NCKH 2026) inspired UI theme:
+    - Ultra-clean Mint/White theme (#F0FDF4 / #F8FAFC)
+    - Emerald Green Primary Accent (#059669 / #10B981)
+    - Rounded 16px soft-shadow cards
+    - Numbered pill buttons for Horizontal Navigation Tabs
+    - Clean Status Badges (Ghi chú học thuật, AI Engine Ready)
     """
     st.markdown("""
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
             
             html, body, [class*="css"] {
-                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             }
 
             /* Hide Sidebar Completely for Top-Header Web App Layout */
@@ -32,9 +32,9 @@ def apply_custom_theme():
             
             /* Main Content Container Padding & Width */
             div.block-container {
-                padding-top: 1rem !important;
+                padding-top: 0.8rem !important;
                 padding-bottom: 3rem !important;
-                max-width: 1240px !important;
+                max-width: 1260px !important;
             }
 
             /* Global Background */
@@ -42,81 +42,180 @@ def apply_custom_theme():
                 background-color: #F8FAFC;
             }
 
-            /* Top Main Header Bar (ProjectHub Style) */
+            /* Top Main Header Bar (SmartRoute-AI Style) */
             .top-header-bar {
-                background-color: #0F172A;
-                border-bottom: 3px solid #2563EB;
-                padding: 14px 28px;
-                margin-top: -1rem;
-                margin-bottom: 24px;
-                border-radius: 0 0 10px 10px;
+                background-color: #FFFFFF;
+                border: 1px solid #E2E8F0;
+                padding: 12px 24px;
+                margin-top: -0.5rem;
+                margin-bottom: 20px;
+                border-radius: 16px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                box-shadow: 0 4px 15px -2px rgba(5, 150, 105, 0.05);
+            }
+
+            .top-header-left {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .top-header-icon {
+                width: 42px;
+                height: 42px;
+                background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.4rem;
                 color: #FFFFFF;
-                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+                box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+            }
+
+            .top-header-title-box {
+                display: flex;
+                align-items: center;
+                gap: 10px;
             }
 
             .top-header-logo {
-                font-size: 1.15rem;
+                font-size: 1.35rem;
                 font-weight: 800;
-                letter-spacing: 0.05em;
-                color: #FFFFFF;
-                text-transform: uppercase;
+                letter-spacing: -0.02em;
+                color: #0F172A;
+            }
+
+            .top-header-logo span {
+                color: #059669;
+            }
+
+            .top-header-badge {
+                background-color: #ECFDF5;
+                color: #059669;
+                border: 1px solid #A7F3D0;
+                font-size: 0.72rem;
+                font-weight: 800;
+                padding: 2px 10px;
+                border-radius: 9999px;
+                letter-spacing: 0.04em;
             }
 
             .top-header-sublogo {
-                font-size: 0.78rem;
-                color: #94A3B8;
+                font-size: 0.8rem;
+                color: #64748B;
                 font-weight: 500;
+                margin-top: 1px;
             }
 
-            .top-header-user {
-                background-color: #1E293B;
-                border: 1px solid #334155;
-                padding: 6px 16px;
-                border-radius: 6px;
-                font-size: 0.82rem;
-                font-weight: 600;
-                color: #F8FAFC;
+            .top-header-right {
+                display: flex;
+                align-items: center;
+                gap: 10px;
             }
 
-            /* Hero Banner */
+            .status-badge-yellow {
+                background-color: #FEF3C7;
+                color: #92400E;
+                border: 1px solid #FDE68A;
+                padding: 6px 14px;
+                border-radius: 9999px;
+                font-size: 0.78rem;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .status-badge-green {
+                background-color: #ECFDF5;
+                color: #059669;
+                border: 1px solid #A7F3D0;
+                padding: 6px 14px;
+                border-radius: 9999px;
+                font-size: 0.78rem;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                background-color: #10B981;
+                border-radius: 50%;
+                display: inline-block;
+            }
+
+            /* Tabs Styling (SmartRoute-AI Navigation Steps) */
+            .stTabs [data-baseweb="tab-list"] {
+                gap: 10px !important;
+                background-color: transparent !important;
+                padding-bottom: 8px !important;
+                border-bottom: none !important;
+            }
+
+            .stTabs [data-baseweb="tab"] {
+                background-color: #FFFFFF !important;
+                border: 1px solid #E2E8F0 !important;
+                border-radius: 12px !important;
+                padding: 10px 18px !important;
+                font-size: 0.88rem !important;
+                font-weight: 600 !important;
+                color: #475569 !important;
+                transition: all 0.2s ease !important;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+            }
+
+            .stTabs [aria-selected="true"] {
+                background-color: #059669 !important;
+                color: #FFFFFF !important;
+                border-color: #059669 !important;
+                font-weight: 700 !important;
+                box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+            }
+
+            /* Hero Banner Card */
             .hero-container {
-                background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
-                border-radius: 10px;
-                padding: 28px 32px;
-                color: #FFFFFF;
-                margin-bottom: 24px;
-                box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.15);
+                background-color: #FFFFFF;
+                border: 1px solid #E2E8F0;
+                border-radius: 16px;
+                padding: 24px 28px;
+                color: #0F172A;
+                margin-bottom: 20px;
+                box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.04);
             }
 
             .hero-badge {
                 display: inline-block;
-                background-color: rgba(59, 130, 246, 0.2);
-                border: 1px solid rgba(147, 197, 253, 0.4);
-                color: #93C5FD;
+                background-color: #ECFDF5;
+                border: 1px solid #A7F3D0;
+                color: #059669;
                 padding: 3px 12px;
                 border-radius: 9999px;
                 font-size: 0.75rem;
                 font-weight: 700;
-                letter-spacing: 0.06em;
+                letter-spacing: 0.04em;
                 text-transform: uppercase;
                 margin-bottom: 10px;
             }
 
             .hero-title {
-                font-size: 2.1rem;
+                font-size: 1.75rem;
                 font-weight: 800;
-                color: #FFFFFF;
+                color: #0F172A;
                 margin-bottom: 6px;
-                line-height: 1.25;
+                line-height: 1.3;
+                letter-spacing: -0.01em;
             }
 
             .hero-subtitle {
-                font-size: 0.98rem;
-                color: #CBD5E1;
-                max-width: 850px;
+                font-size: 0.92rem;
+                color: #64748B;
+                max-width: 900px;
                 line-height: 1.5;
             }
 
@@ -124,14 +223,19 @@ def apply_custom_theme():
             .metric-card {
                 background-color: #FFFFFF;
                 border: 1px solid #E2E8F0;
-                border-radius: 8px;
-                padding: 18px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
-                text-align: center;
+                border-radius: 14px;
+                padding: 18px 20px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .metric-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
             }
             
             .metric-card-title {
-                font-size: 0.8rem;
+                font-size: 0.78rem;
                 font-weight: 700;
                 color: #64748B;
                 text-transform: uppercase;
@@ -140,14 +244,14 @@ def apply_custom_theme():
             }
             
             .metric-card-value {
-                font-size: 1.8rem;
+                font-size: 1.85rem;
                 font-weight: 800;
                 color: #0F172A;
             }
 
             .metric-card-subtitle {
                 font-size: 0.78rem;
-                color: #2563EB;
+                color: #059669;
                 font-weight: 600;
                 margin-top: 4px;
             }
@@ -155,16 +259,16 @@ def apply_custom_theme():
             /* Prediction Result Card */
             .result-card {
                 background-color: #FFFFFF;
-                border: 1px solid #CBD5E1;
-                border-left: 6px solid #2563EB;
-                border-radius: 8px;
-                padding: 18px 24px;
+                border: 1px solid #A7F3D0;
+                border-left: 6px solid #059669;
+                border-radius: 14px;
+                padding: 20px 24px;
                 margin-bottom: 16px;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+                box-shadow: 0 4px 15px rgba(5, 150, 105, 0.06);
             }
 
             .result-title {
-                font-size: 1.45rem;
+                font-size: 1.5rem;
                 font-weight: 800;
                 color: #0F172A;
                 margin-bottom: 6px;
@@ -178,7 +282,7 @@ def apply_custom_theme():
 
             /* Section Header */
             .section-header {
-                font-size: 1.25rem;
+                font-size: 1.2rem;
                 font-weight: 700;
                 color: #0F172A;
                 border-bottom: 2px solid #E2E8F0;
@@ -187,14 +291,14 @@ def apply_custom_theme():
                 margin-bottom: 16px;
             }
 
-            /* Styled Alerts (No Emoji) */
+            /* Styled Alerts (SmartRoute-AI Style) */
             .alert-info-box {
-                background-color: #EFF6FF;
-                border: 1px solid #BFDBFE;
-                border-left: 4px solid #2563EB;
-                color: #1E40AF;
+                background-color: #F0FDF4;
+                border: 1px solid #BBF7D0;
+                border-left: 4px solid #16A34A;
+                color: #14532D;
                 padding: 14px 18px;
-                border-radius: 6px;
+                border-radius: 10px;
                 margin-bottom: 16px;
                 font-size: 0.92rem;
             }
@@ -205,7 +309,7 @@ def apply_custom_theme():
                 border-left: 4px solid #D97706;
                 color: #92400E;
                 padding: 14px 18px;
-                border-radius: 6px;
+                border-radius: 10px;
                 margin-bottom: 16px;
                 font-size: 0.92rem;
             }
@@ -216,9 +320,25 @@ def apply_custom_theme():
                 border-left: 4px solid #059669;
                 color: #065F46;
                 padding: 14px 18px;
-                border-radius: 6px;
+                border-radius: 10px;
                 margin-bottom: 16px;
                 font-size: 0.92rem;
+            }
+
+            /* Primary Button Styling */
+            .stButton > button {
+                background-color: #059669 !important;
+                color: #FFFFFF !important;
+                border: none !important;
+                border-radius: 10px !important;
+                padding: 10px 24px !important;
+                font-weight: 700 !important;
+                transition: all 0.2s ease !important;
+            }
+
+            .stButton > button:hover {
+                background-color: #047857 !important;
+                box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -227,12 +347,19 @@ def apply_custom_theme():
 def render_top_header():
     st.markdown("""
         <div class="top-header-bar">
-            <div>
-                <div class="top-header-logo">SIGANGE — TRAFFIC SIGN RECOGNITION</div>
-                <div class="top-header-sublogo">KHOA CÔNG NGHỆ THÔNG TIN — HỌC PHẦN MÁY HỌC</div>
+            <div class="top-header-left">
+                <div class="top-header-icon">🚦</div>
+                <div>
+                    <div class="top-header-title-box">
+                        <div class="top-header-logo">Sigange<span>-AI</span></div>
+                        <div class="top-header-badge">KHOA CNTT</div>
+                    </div>
+                    <div class="top-header-sublogo">Hệ thống Nhận diện & Phân loại Biển báo Giao thông Tự động</div>
+                </div>
             </div>
-            <div class="top-header-user">
-                BÁO CÁO DỰ ÁN MÁY HỌC
+            <div class="top-header-right">
+                <div class="status-badge-yellow">Ghi chú học thuật</div>
+                <div class="status-badge-green"><span class="status-dot"></span> AI Engine Ready</div>
             </div>
         </div>
     """, unsafe_allow_html=True)
