@@ -5,11 +5,10 @@ import streamlit as st
 def apply_custom_theme():
     """
     Applies SmartRoute-AI (NCKH 2026) inspired UI theme:
-    - Ultra-clean Mint/White theme (#F0FDF4 / #F8FAFC)
-    - Emerald Green Primary Accent (#059669 / #10B981)
-    - Rounded 16px soft-shadow cards
-    - Numbered pill buttons for Horizontal Navigation Tabs
-    - Clean Status Badges (Ghi chú học thuật, AI Engine Ready)
+    - Removes all default Streamlit red/pink underline indicators
+    - Rounded 9999px Full Pill Buttons for Horizontal Tabs
+    - Clean Header Bar with Status Pills & AI Engine Badge
+    - Ultra-clean Cards with Icon Circle Headers (#ECFDF5 / #059669)
     """
     st.markdown("""
         <style>
@@ -63,8 +62,8 @@ def apply_custom_theme():
             }
 
             .top-header-icon {
-                width: 42px;
-                height: 42px;
+                width: 44px;
+                height: 44px;
                 background: linear-gradient(135deg, #10B981 0%, #059669 100%);
                 border-radius: 12px;
                 display: flex;
@@ -72,7 +71,7 @@ def apply_custom_theme():
                 justify-content: center;
                 font-size: 1.4rem;
                 color: #FFFFFF;
-                box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
             }
 
             .top-header-title-box {
@@ -150,9 +149,21 @@ def apply_custom_theme():
                 display: inline-block;
             }
 
-            /* Tabs Styling (SmartRoute-AI Navigation Steps) */
+            /* REMOVE Streamlit's Default Red/Pink Underline Active Tab Line */
+            div[data-baseweb="tab-highlight-title"] {
+                display: none !important;
+                background-color: transparent !important;
+                height: 0px !important;
+            }
+            
+            div[data-baseweb="tab-border"] {
+                display: none !important;
+                height: 0px !important;
+            }
+
+            /* Streamlit Tabs - Pill Shape (SmartRoute-AI Navigation Steps) */
             .stTabs [data-baseweb="tab-list"] {
-                gap: 10px !important;
+                gap: 8px !important;
                 background-color: transparent !important;
                 padding-bottom: 8px !important;
                 border-bottom: none !important;
@@ -161,13 +172,19 @@ def apply_custom_theme():
             .stTabs [data-baseweb="tab"] {
                 background-color: #FFFFFF !important;
                 border: 1px solid #E2E8F0 !important;
-                border-radius: 12px !important;
-                padding: 10px 18px !important;
+                border-radius: 9999px !important;
+                padding: 8px 20px !important;
                 font-size: 0.88rem !important;
                 font-weight: 600 !important;
-                color: #475569 !important;
+                color: #334155 !important;
                 transition: all 0.2s ease !important;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+            }
+
+            .stTabs [data-baseweb="tab"]:hover {
+                background-color: #ECFDF5 !important;
+                color: #059669 !important;
+                border-color: #A7F3D0 !important;
             }
 
             .stTabs [aria-selected="true"] {
@@ -175,18 +192,39 @@ def apply_custom_theme():
                 color: #FFFFFF !important;
                 border-color: #059669 !important;
                 font-weight: 700 !important;
-                box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+                box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3) !important;
             }
 
-            /* Hero Banner Card */
+            /* Hero Banner Card with Icon Circle Header */
             .hero-container {
                 background-color: #FFFFFF;
                 border: 1px solid #E2E8F0;
                 border-radius: 16px;
-                padding: 24px 28px;
+                padding: 22px 28px;
                 color: #0F172A;
                 margin-bottom: 20px;
                 box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.04);
+            }
+
+            .hero-header-flex {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                margin-bottom: 8px;
+            }
+
+            .hero-icon-circle {
+                width: 44px;
+                height: 44px;
+                background-color: #ECFDF5;
+                border: 1px solid #A7F3D0;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.35rem;
+                color: #059669;
+                flex-shrink: 0;
             }
 
             .hero-badge {
@@ -194,20 +232,19 @@ def apply_custom_theme():
                 background-color: #ECFDF5;
                 border: 1px solid #A7F3D0;
                 color: #059669;
-                padding: 3px 12px;
+                padding: 2px 10px;
                 border-radius: 9999px;
-                font-size: 0.75rem;
-                font-weight: 700;
+                font-size: 0.72rem;
+                font-weight: 800;
                 letter-spacing: 0.04em;
                 text-transform: uppercase;
-                margin-bottom: 10px;
+                margin-bottom: 4px;
             }
 
             .hero-title {
-                font-size: 1.75rem;
+                font-size: 1.65rem;
                 font-weight: 800;
                 color: #0F172A;
-                margin-bottom: 6px;
                 line-height: 1.3;
                 letter-spacing: -0.01em;
             }
@@ -217,6 +254,7 @@ def apply_custom_theme():
                 color: #64748B;
                 max-width: 900px;
                 line-height: 1.5;
+                margin-top: 4px;
             }
 
             /* Metric Cards */
@@ -298,7 +336,7 @@ def apply_custom_theme():
                 border-left: 4px solid #16A34A;
                 color: #14532D;
                 padding: 14px 18px;
-                border-radius: 10px;
+                border-radius: 12px;
                 margin-bottom: 16px;
                 font-size: 0.92rem;
             }
@@ -309,7 +347,7 @@ def apply_custom_theme():
                 border-left: 4px solid #D97706;
                 color: #92400E;
                 padding: 14px 18px;
-                border-radius: 10px;
+                border-radius: 12px;
                 margin-bottom: 16px;
                 font-size: 0.92rem;
             }
@@ -320,7 +358,7 @@ def apply_custom_theme():
                 border-left: 4px solid #059669;
                 color: #065F46;
                 padding: 14px 18px;
-                border-radius: 10px;
+                border-radius: 12px;
                 margin-bottom: 16px;
                 font-size: 0.92rem;
             }
@@ -365,11 +403,16 @@ def render_top_header():
     """, unsafe_allow_html=True)
 
 
-def render_hero_banner(title: str, subtitle: str, badge_text: str = "HỆ THỐNG PHÂN LOẠI BIỂN BÁO GIAO THÔNG"):
+def render_hero_banner(title: str, subtitle: str, badge_text: str = "HỆ THỐNG PHÂN LOẠI BIỂN BÁO GIAO THÔNG", icon: str = "🚦"):
     st.markdown(f"""
         <div class="hero-container">
-            <div class="hero-badge">{badge_text}</div>
-            <div class="hero-title">{title}</div>
+            <div class="hero-header-flex">
+                <div class="hero-icon-circle">{icon}</div>
+                <div>
+                    <div class="hero-badge">{badge_text}</div>
+                    <div class="hero-title">{title}</div>
+                </div>
+            </div>
             <div class="hero-subtitle">{subtitle}</div>
         </div>
     """, unsafe_allow_html=True)
