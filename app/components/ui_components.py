@@ -5,10 +5,10 @@ import streamlit as st
 def apply_custom_theme():
     """
     Applies SmartRoute-AI (NCKH 2026) inspired UI theme:
-    - Removes all default Streamlit red/pink underline indicators
-    - Rounded 9999px Full Pill Buttons for Horizontal Tabs
-    - Clean Header Bar with Status Pills & AI Engine Badge
-    - Ultra-clean Cards with Icon Circle Headers (#ECFDF5 / #059669)
+    - Eradicates all Streamlit red/pink tab underlines & borders
+    - Full 9999px Pill Navigation Buttons with Emerald Green active state
+    - Styled Segmented Radio Buttons for Model & Sub-mode Selection
+    - Icon Circle Headers for Hero Banners & Section Cards
     """
     st.markdown("""
         <style>
@@ -149,19 +149,26 @@ def apply_custom_theme():
                 display: inline-block;
             }
 
-            /* REMOVE Streamlit's Default Red/Pink Underline Active Tab Line */
-            div[data-baseweb="tab-highlight-title"] {
+            /* ERADICATE Streamlit's Default Red/Pink/Orange Active Tab Line & Borders Permanently */
+            div[data-baseweb="tab-highlight-title"],
+            div[data-baseweb="tab-highlight"],
+            div[data-baseweb="tab-border"],
+            [data-baseweb="tab-highlight-title"],
+            [data-baseweb="tab-highlight"],
+            [data-baseweb="tab-border"] {
                 display: none !important;
+                opacity: 0 !important;
+                height: 0px !important;
+                min-height: 0px !important;
+                max-height: 0px !important;
+                width: 0px !important;
                 background-color: transparent !important;
-                height: 0px !important;
-            }
-            
-            div[data-baseweb="tab-border"] {
-                display: none !important;
-                height: 0px !important;
+                background: transparent !important;
+                border: none !important;
+                visibility: hidden !important;
             }
 
-            /* Streamlit Tabs - Pill Shape (SmartRoute-AI Navigation Steps) */
+            /* Streamlit Tabs Container styling */
             .stTabs [data-baseweb="tab-list"] {
                 gap: 8px !important;
                 background-color: transparent !important;
@@ -169,6 +176,11 @@ def apply_custom_theme():
                 border-bottom: none !important;
             }
 
+            .stTabs [data-baseweb="tab-list"] > div {
+                border-bottom: none !important;
+            }
+
+            /* Streamlit Main & Sub Tabs - Full 9999px Pill Shape */
             .stTabs [data-baseweb="tab"] {
                 background-color: #FFFFFF !important;
                 border: 1px solid #E2E8F0 !important;
@@ -179,6 +191,7 @@ def apply_custom_theme():
                 color: #334155 !important;
                 transition: all 0.2s ease !important;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+                margin-bottom: 4px !important;
             }
 
             .stTabs [data-baseweb="tab"]:hover {
@@ -193,6 +206,28 @@ def apply_custom_theme():
                 border-color: #059669 !important;
                 font-weight: 700 !important;
                 box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3) !important;
+            }
+
+            .stTabs [aria-selected="true"] span {
+                color: #FFFFFF !important;
+            }
+
+            /* Segmented Control Styling for Radio Buttons (SmartRoute-AI Style) */
+            div[data-testid="stRadio"] > label {
+                font-size: 0.88rem !important;
+                font-weight: 700 !important;
+                color: #0F172A !important;
+                margin-bottom: 8px !important;
+            }
+
+            div[data-testid="stRadio"] [role="radiogroup"] {
+                gap: 8px !important;
+                background-color: #FFFFFF !important;
+                padding: 6px !important;
+                border-radius: 9999px !important;
+                border: 1px solid #E2E8F0 !important;
+                display: inline-flex !important;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
             }
 
             /* Hero Banner Card with Icon Circle Header */
