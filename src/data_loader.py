@@ -49,6 +49,15 @@ def find_dataset_dir(base_path: Path = RAW_DATA_DIR) -> Tuple[Optional[Path], bo
             logger.warning("Real GTSRB dataset not found in data/raw/. Using SAMPLE dataset for pipeline testing ONLY.")
             return SAMPLE_DATA_DIR, True
             
+    # 5. Auto-create sample dataset on-the-fly for cloud deployments
+    logger.warning("Dataset directory missing. Auto-generating sample demo dataset for deployment...")
+    try:
+        create_sample_dataset()
+        if SAMPLE_DATA_DIR.exists():
+            return SAMPLE_DATA_DIR, True
+    except Exception as e:
+        logger.error(f"Failed to auto-create sample dataset: {e}")
+
     return None, False
 
 

@@ -14,7 +14,7 @@ ENV/
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
-data/sample/*
+!data/sample/**
 data/*.db
 models/*.pkl
 models/*.h5
