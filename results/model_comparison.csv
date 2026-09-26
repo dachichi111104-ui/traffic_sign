@@ -1,0 +1,3 @@
+Model,Accuracy,Precision (Weighted),Recall (Weighted),F1-score (Weighted),Precision (Macro),Recall (Macro),F1-score (Macro)
+CNN,86.96%,92.35%,86.96%,88.29%,92.55%,87.33%,88.67%
+HOG + SVM,96.96%,96.98%,96.96%,96.95%,98.13%,97.47%,97.78%

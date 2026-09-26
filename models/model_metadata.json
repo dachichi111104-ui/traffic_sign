@@ -1,0 +1,9 @@
+{
+    "dataset_path": "C:\\Downloads\\sigange\\data\\raw\\GTSRB\\Train",
+    "is_sample_dataset": false,
+    "num_classes": 43,
+    "trained_timestamp": "2026-09-26 15:23:46",
+    "epochs_run": 47,
+    "final_train_acc": 0.9975,
+    "final_val_acc": 0.9993
+}
