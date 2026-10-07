@@ -1,136 +1,120 @@
-# TRAFFIC SIGN IMAGE CLASSIFICATION & RECOGNITION (SIGANGE)
+# PHÂN LOẠI VÀ NHẬN DIỆN BIỂN BÁO GIAO THÔNG (SIGANGE)
 
 > **HỌC PHẦN:** MÁY HỌC (MACHINE LEARNING - MALE330863)  
-> **ĐỀ TÀI:** XÂY DỰNG HỆ THỐNG PHÂN LOẠI BIỂN BÁO GIAO THÔNG ĐƯỜNG BỘ DỰA TRÊN MACHINE LEARNING & DEEP LEARNING
+> **ĐỀ TÀI:** XÂY DỰNG HỆ THỐNG PHÂN LOẠI VÀ NHẬN DIỆN BIỂN BÁO GIAO THÔNG ĐƯỜNG BỘ BẰNG MACHINE LEARNING VÀ DEEP LEARNING  
+> **MỤC TIÊU:** Huấn luyện, đánh giá các mô hình trên ảnh biển báo và cung cấp ứng dụng Streamlit thử nghiệm dự đoán thực thời. Mặc định hướng tới bộ dữ liệu GTSRB (43 lớp), bộ nạp dữ liệu hỗ trợ cả các dataset khác.
 
 ---
 
-## TỔNG QUAN ĐỒ ÁN (PROJECT OVERVIEW)
+## 📌 QUY TRÌNH PHÁT TRIỂN MÁY HỌC (MACHINE LEARNING PIPELINE)
 
-Dự án **SIGANGE** là một hệ thống phân loại và nhận diện biển báo giao thông đường bộ tự động toàn diện từ A-Z, tuân thủ nghiêm ngặt quy trình phát triển Machine Learning chuẩn học thuật:
+Quy trình xử lý tuân thủ nghiêm ngặt chuẩn học thuật và chống rò rỉ dữ liệu (Anti Data Leakage):
 
-$$\text{DATASET} \longrightarrow \text{EDA} \longrightarrow \text{PREPROCESSING} \longrightarrow \text{FEATURE EXTRACTION} \longrightarrow \text{MODEL TRAINING} \longrightarrow \text{EVALUATION} \longrightarrow \text{WEB APP DEMO}$$
+$$\text{Dataset} \longrightarrow \text{Khảo sát (EDA)} \longrightarrow \text{Tiền xử lý} \longrightarrow \text{Chia tập (70/15/15)} \longrightarrow \text{Huấn luyện} \longrightarrow \text{Đánh giá} \longrightarrow \text{Demo dự đoán}$$
 
-### Các Điểm Nổi Bật Kỹ Thuật (Key Features):
-1. **Tiền Xử Lý Nâng Cao (CLAHE)**: Cân bằng tương phản thích ứng thích nghi trên không gian màu **LAB** (kênh $L$), giúp nhận diện tốt biển báo bị bóng râm, thiếu sáng hoặc chói nắng.
-2. **Chống Rò Rỉ Dữ Liệu (Anti Data Leakage)**: Phân chia tập dữ liệu **Train (70%) / Validation (15%) / Test (15%)** *trước* khi tăng cường dữ liệu (Data Augmentation).
-3. **Mô Hình Đối Chứng (Baseline & Deep Learning)**:
-   - **Baseline ML**: Trích xuất đặc trưng **HOG (Histogram of Oriented Gradients)** 324 chiều kết hợp chuẩn hóa **StandardScaler** và phân loại bằng **RBF SVM** ($\approx 96.96\%$ Accuracy).
-   - **Deep Learning CNN**: Kiến trúc mạng cuộn 3 khối Conv2D với **BatchNormalization**, **Dropout (0.25/0.5)**, **ReduceLROnPlateau**, **Class Weighting** và **EarlyStopping** ($\approx 98.5\%+$ Accuracy).
-   - **Transfer Learning**: Tích hợp mô hình pretrained **MobileNetV2** cho bài toán phân loại nâng cao.
-4. **Giao Diện Web App Sang Trọng**: Giao diện chuẩn doanh nghiệp / học thuật (phong cách Royal Navy `#0F172A`), hỗ trợ **Bật/Tắt Webcam**, **Tự động khoanh vùng & cắt biển báo (Smart Auto Sign Crop)** và **Cắt ảnh thủ công (Manual Crop Sliders)**.
+* **Chống rò rỉ dữ liệu (Data Leakage Protection):** Bộ dữ liệu được chia thành **Train (70%) / Validation (15%) / Test (15%)** *trước* khi áp dụng Data Augmentation.
+* **Tập Train (70%):** Áp dụng Data Augmentation để tăng độ phong phú mẫu.
+* **Tập Validation (15%):** Dùng để theo dõi quá trình huấn luyện, chọn checkpoint và dừng sớm (Early Stopping).
+* **Tập Test (15%):** Giữ độc lập tuyệt đối để đánh giá hiệu năng cuối cùng (Accuracy, Precision, Recall, F1-Score, Confusion Matrix).
 
 ---
 
-## CẤU TRÚC THƯ MỤC DỰ ÁN (PROJECT STRUCTURE)
+## ⚙️ 10 KỸ THUẬT TIỀN XỬ LÝ & TĂNG CƯỜNG DỮ LIỆU (PREPROCESSING & AUGMENTATION)
+
+| # | Kỹ thuật | Trạng thái | Vai trò & Tác dụng Kỹ thuật |
+| :---: | :--- | :---: | :--- |
+| **1** | **Resize ảnh về 32×32 (INTER_AREA)** | ✅ Đang dùng | Chuẩn hóa kích thước đầu vào đồng nhất cho CNN & HOG. |
+| **2** | **CLAHE trên kênh L của LAB** | ✅ Đang dùng | Cải thiện tương phản cục bộ mà ít làm lệch màu (dành cho CNN/dự đoán CNN). |
+| **3** | **Gamma Correction (Hiệu chỉnh Gamma)** | 💡 Đã tích hợp | Điều chỉnh độ sáng toàn cục phi tuyến ($\gamma > 1$ làm sáng bóng râm, $\gamma < 1$ giảm chói). |
+| **4** | **Unsharp Masking (Làm sắc nét cạnh)** | 💡 Đã tích hợp | Tăng độ rõ của các đường biên và chi tiết nhỏ (số 50/80 km/h, mũi tên, biểu tượng). |
+| **5** | **Chuẩn hóa pixel (/255 hoặc Z-score)** | ✅ /255 đang dùng (Z-score khả thi) | Đưa pixel về thang suitable cho gradient descent; Z-score tính mean/std từ Train. |
+| **6** | **Rotation ngẫu nhiên ±12°** | ✅ Đang dùng (Augmentation) | Mô phỏng biển báo nghiêng nhẹ do góc đặt biển hoặc camera. |
+| **7** | **Translation ngẫu nhiên ±3 px** | ✅ Đang dùng (Augmentation) | Mô phỏng biển báo nằm lệch khỏi tâm khung hình. |
+| **8** | **Thay đổi độ sáng & Gaussian Blur** | ✅ Đang dùng (Augmentation) | Mô phỏng điều kiện ánh sáng thay đổi và ảnh mờ sương mù/thời tiết. |
+| **9** | **Perspective Transform (Phối cảnh)** | 💡 Đã tích hợp (Augmentation) | Mô phỏng góc nhìn nghiêng của camera hành trình xe buýt/ô tô. |
+| **10** | **Cutout / Random Erasing** | 💡 Đã tích hợp (Augmentation) | Xóa ngẫu nhiên vùng ảnh, xử lý vấn đề biển báo bị vật thể (lá cây, cột) che khuất. |
+| **+** | **Motion Blur (Mờ chuyển động)** | 💡 Đã tích hợp (Augmentation) | Mô phỏng hiện tượng mờ ảnh theo góc chuyển động khi xe chạy tốc độ cao. |
+
+### Chi Tiết Kỹ Thuật Nâng Cao:
+* **Gamma Correction:** Tăng cường hoặc giảm bớt mức độ chiếu sáng phi tuyến tính.
+* **Unsharp Masking:** Làm rõ nét các thông số số hiệu tốc độ, biểu tượng chỉ hướng trên biển báo.
+* **Perspective Transform:** Tạo ra các góc nghiêng phối cảnh thực tế của phương tiện giao thông.
+* **Cutout / Random Erasing:** Buộc mô hình cuộn học toàn bộ cấu trúc biển báo thay vì chỉ phụ thuộc vào một chi tiết đơn lẻ.
+* **Per-Channel Z-score Normalization:** Chuẩn hóa $X_{norm} = \frac{X - \mu}{\sigma + 1e-7}$ giúp CNN hội tụ nhanh và ổn định hơn.
+
+---
+
+## ⚖️ KỸ THUẬT XỬ LÝ DỮ LIỆU MẤT CÂN BẰNG (IMBALANCED DATA SAMPLING)
+
+Dự án tích hợp các phương pháp cân bằng mẫu cho tập dữ liệu imbalanced:
+1. **Random Undersampling:** Lấy mẫu ngẫu nhiên giảm số lượng của các lớp đa số về số mẫu mục tiêu.
+2. **NearMiss (NearMiss-1):** Giữ lại các mẫu thuộc lớp đa số có khoảng cách trung bình nhỏ nhất tới K mẫu thuộc lớp thiểu số kề cận (dùng K-NN).
+3. **Cluster Centroids:** Sử dụng thuật toán **K-Means** trên lớp đa số để thay thế các tập mẫu bằng các tâm cụm đại diện.
+4. **Class Weighting:** Tính trọng số mất mát $w_c = \frac{N}{K \cdot N_c}$ hỗ trợ huấn luyện CNN trực tiếp mà không làm mất mẫu dữ liệu.
+
+---
+
+## 🤖 MÔ HÌNH VÀ ĐÁNH GIÁ (MODELS & EVALUATION)
+
+* **HOG + SVM (RBF Kernel):** Mô hình Machine Learning baseline. Trích xuất 324 chiều đặc trưng **HOG (Histogram of Oriented Gradients)** kết hợp chuẩn hóa **StandardScaler** và phân loại bằng RBF SVM.
+* **Custom CNN:** Mạng tích chập 3 khối Conv2D với **Batch Normalization**, **Dropout (0.25/0.5)**, huấn luyện kèm **Class Weighting**, **Early Stopping** và **ReduceLROnPlateau**.
+* **MobileNetV2:** Tùy chọn Transfer Learning tiên tiến tích hợp sẵn trong mã nguồn.
+* **Chỉ số đánh giá:** Accuracy, Precision (Macro/Weighted), Recall (Macro/Weighted), F1-Score (Macro/Weighted), Ma trận nhầm lẫn (Confusion Matrix) và phân tích ảnh dự đoán sai.
+
+---
+
+## 📁 CẤU TRÚC THƯ MỤC DỰ ÁN (PROJECT STRUCTURE)
 
 ```text
-sigange/
-├── app/                        # Giao diện Web App Streamlit
-│   ├── app.py                  # File chạy chính ứng dụng Streamlit (Top Header Nav)
-│   └── components/             # Các thành phần UI sang trọng (Header, Hero, Metric Cards)
-├── data/                       # Thư mục dữ liệu (Đã được gitignore để giữ repo nhẹ)
-│   ├── raw/                    # Chứa bộ dữ liệu gốc GTSRB (Train/0..42)
-│   ├── sample/                 # Bộ dữ liệu mẫu nhẹ để chạy thử nghiệm pipeline
-│   └── external_test/          # Ảnh ngoài dataset phục vụ kiểm thử
-├── models/                     # Thư mục chứa model đã huấn luyện (.keras, .pkl)
-├── notebooks/                  # 5 Notebooks Jupyter chuẩn học thuật
-│   ├── 01_eda.ipynb            # Khảo sát dữ liệu & phân bố lớp
-│   ├── 02_preprocessing.ipynb  # Tiền xử lý CLAHE, Normalization & Data Augmentation
-│   ├── 03_svm_baseline.ipynb   # Trích xuất đặc trưng HOG & Huấn luyện SVM
-│   ├── 04_cnn_training.ipynb   # Huấn luyện CNN, BatchNormalization & Transfer Learning
-│   └── 05_evaluation.ipynb     # Đánh giá Test Set, Confusion Matrix & Error Analysis
-├── results/                    # Kết quả thực nghiệm (Conf Matrix, Model Comparison CSV)
-├── src/                        # Mã nguồn Python mô-đun hóa
-│   ├── config.py               # Cấu hình siêu tham số, đường dẫn & 43 lớp GTSRB
-│   ├── data_loader.py          # Nạp dữ liệu tự động (GTSRB thật hoặc Sample Demo)
-│   ├── preprocessing.py        # Pipeline CLAHE, Split, Augmentation & Auto-Crop
-│   ├── feature_extraction.py   # Trích xuất đặc trưng HOG
-│   ├── train_svm.py            # Huấn luyện mô hình HOG + SVM
-│   ├── train_cnn.py            # Huấn luyện mô hình Custom CNN & MobileNetV2
-│   ├── evaluate.py             # Đánh giá tập Test độc lập & trích xuất ảnh sai
-│   └── predict.py              # Pipeline dự đoán cho ứng dụng Web
-├── .gitignore                  # Bỏ qua dữ liệu nặng và file model tạm
-├── requirements.txt            # Danh sách thư viện Python cần thiết
-└── README.md                   # Tài liệu hướng dẫn đồ án
+traffic_sign/
+├── app/                        # Giao diện Web App Streamlit (Dashboard, Phân loại, Dataset, Đánh giá, So sánh, Lịch sử)
+│   ├── app.py                  # File chính ứng dụng Web Streamlit
+│   └── components/             # Các thành phần UI (Header, Hero, Cards, Alerts)
+├── data/                       # Thư mục dữ liệu gốc (GTSRB), dữ liệu mẫu (sample), external test & lịch sử SQLite
+├── models/                     # Mô hình đã huấn luyện (.keras, .pkl), class mapping & metadata
+├── notebooks/                  # 5 Notebooks Jupyter chuẩn học thuật (EDA, Preprocessing, SVM, CNN, Evaluation)
+├── results/                    # Kết quả thực nghiệm (Metrics JSON, Comparison CSV, Confusion Matrix, Training Curves)
+├── src/                        # Các mô-đun Python (data_loader, config, preprocessing, feature_extraction, train_svm, train_cnn, evaluate, predict)
+├── requirements.txt            # Thư viện phụ thuộc
+└── README.md                   # Tài liệu chi tiết đồ án
 ```
 
 ---
 
-## HƯỚNG DẪN CÀI ĐẶT & CHẠY DEMO CHO THÀNH VIÊN NHÓM
+## 🚀 CÀI ĐẶT VÀ CHẠY DỰ ÁN (SETUP & EXECUTION)
 
-### 1. Cài đặt môi trường
-Mở Terminal / PowerShell tại thư mục dự án và chạy các lệnh:
+Chạy các lệnh tại thư mục gốc `traffic_sign/`:
 
+### 1. Khởi tạo môi trường và cài đặt thư viện
 ```bash
-# Tạo môi trường ảo Python (Khuyên dùng)
 python -m venv .venv
-
-# Kích hoạt môi trường ảo (Windows)
 .venv\Scripts\activate
-
-# Cài đặt toàn bộ thư viện phụ thuộc
 pip install -r requirements.txt
 ```
 
-### 2. Chạy Ứng Dụng Web Streamlit (Chế Độ Demo Nhanh)
-Bạn **không cần tải bộ dữ liệu nặng** ngay lập tức. Hệ thống có sẵn chế độ **Sample Demo** tự động giúp thành viên nhóm chạy được ngay ứng dụng để xem giao diện và thử nghiệm:
-
+### 2. Tạo dữ liệu mẫu (nếu chưa có dataset thật)
 ```bash
-# Tạo dữ liệu mẫu nhẹ (nếu chưa có)
 python -m src.data_loader --create-sample
+```
 
-# Chạy ứng dụng Web
+### 3. Huấn luyện mô hình và khởi chạy Web App
+```bash
+# 1. Huấn luyện mô hình Baseline HOG + SVM
+python -m src.train_svm
+
+# 2. Huấn luyện mô hình Deep Learning Custom CNN
+python -m src.train_cnn
+
+# (Tùy chọn) Sử dụng cờ --retrain để huấn luyện lại CNN khi file model đã tồn tại:
+python -m src.train_cnn --retrain
+
+# 3. Khởi chạy ứng dụng Web Streamlit
 streamlit run app/app.py
 ```
-Mở trình duyệt tại đường dẫn `http://localhost:8501`.
 
 ---
 
-## KẾT QUẢ THỰC NGHIỆM ĐÁNH GIÁ MÔ HÌNH (EXPERIMENTAL RESULTS)
-
-Đánh giá độc lập trên tập **Test Set (15% - 5,882 ảnh)**:
-
-| Mô Hình (Model) | Accuracy | Precision (Macro) | Recall (Macro) | F1-Score (Macro) | F1-Score (Weighted) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **HOG + RBF SVM (Baseline)** | **96.96%** | 97.85% | 97.71% | 97.78% | 96.95% |
-| **Custom CNN (Deep Learning)** | **98.65%** | 98.92% | 98.80% | 98.86% | 98.64% |
-
----
-
-## HƯỚNG DẪN PUSH LÊN GITHUB & DEPLOY ONLINE MIỄN PHÍ
-
-### Bước 1: Đẩy mã nguồn lên GitHub (Dung lượng siêu nhẹ < 5MB)
-File `.gitignore` đã được cấu hình sẵn để **bỏ qua bộ dữ liệu nặng và các file model lớn**. Bạn chỉ cần đẩy phần mã nguồn nhẹ lên GitHub:
-
-```bash
-# 1. Khởi tạo Git repo (nếu chưa có)
-git init
-
-# 2. Thêm tất cả file mã nguồn
-git add .
-
-# 3. Commit
-git commit -m "Feat: Complete Traffic Sign Classification Pipeline & Streamlit Web App"
-
-# 4. Liên kết với GitHub Repo của bạn và Push
-git remote add origin https://github.com/USERNAME/sigange.git
-git branch -M main
-git push -u origin main
-```
-
-### Bước 2: Deploy ứng dụng Web chạy Online Miễn Phí (Streamlit Community Cloud)
-Để tất cả thành viên trong nhóm và Thầy/Cô có thể mở liên kết web dùng thử trực tiếp mà không cần cài đặt code:
-
-1. Truy cập [share.streamlit.io](https://share.streamlit.io/) và đăng nhập bằng tài khoản GitHub.
-2. Bấm nút **New app**.
-3. Chọn Repository `sigange`, Branch `main`, và Main file path: `app/app.py`.
-4. Bấm **Deploy!** 
-5. Bạn sẽ nhận được một đường link public (Ví dụ: `https://sigange-traffic-sign.streamlit.app`) để chia sẻ cho cả nhóm và đưa vào báo cáo môn học!
-
----
-
-## TÁC GIẢ & THÔNG TIN HỌC PHẦN
-- **Đồ án môn học**: Máy học (Machine Learning)
+## 👨‍💻 THÔNG TIN HỌC PHẦN
+- **Học phần**: Máy học (Machine Learning)
 - **Khoa**: Công nghệ Thông tin
 - **Năm học**: 2025 - 2026

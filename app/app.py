@@ -92,16 +92,17 @@ with nav_tabs[0]:
     with c4:
         render_metric_card("Baseline HOG + SVM", svm_acc, "Machine Learning Baseline")
 
-    st.markdown("<div class='section-header'>Quy Trình Xử Lý Machine Learning Pipeline</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-header'>Quy Trình Xử Lý Machine Learning Pipeline Chống Rò Rỉ Dữ Liệu</div>", unsafe_allow_html=True)
     col_l, col_r = st.columns([1.2, 1])
 
     with col_l:
         st.markdown("""
-        * **1. Data Loading & Preprocessing:** Chuẩn hóa RGB, Resize 32x32, Normalize [0, 1].
-        * **2. Train / Val / Test Split (70/15/15):** Chia dữ liệu chống rò rỉ (Data Leakage). Data Augmentation duy nhất cho tập Train.
-        * **3. Baseline Model (HOG + SVM):** Trích xuất đặc trưng HOG (324 chiều) và phân loại bằng SVM RBF Kernel.
-        * **4. Deep Learning Model (CNN):** Mạng cuộn 3 khối Conv2D Keras TensorFlow với Dropout, EarlyStopping và Checkpoint.
-        * **5. Evaluation & Comparison:** Đánh giá Test set độc lập, xuất Confusion Matrix, Classification Report và so sánh đối chứng.
+        * **1. Dataset & Khảo Sát (EDA):** Tải dữ liệu GTSRB (43 lớp), kiểm tra phân bố số lượng mẫu và kích thước ảnh.
+        * **2. Preprocessing & Split (70/15/15):** Chia tập **Train (70%)**, **Validation (15%)**, **Test (15%)** *trước* khi Augmentation để chống rò rỉ dữ liệu (Data Leakage).
+        * **3. Data Augmentation (Chỉ tập Train):** Xoay ±12°, Dịch chuyển ±3px, Gamma, Unsharp Masking, Motion Blur, Perspective Transform & Cutout.
+        * **4. Baseline Model (HOG + SVM):** Trích xuất 324 chiều HOG (Histogram of Oriented Gradients) + RBF Kernel SVM baseline.
+        * **5. Deep Learning Model (CNN & Transfer Learning):** Mạng cuộn Custom CNN 3 khối Conv2D (Batch Normalization, Dropout, Class Weighting, EarlyStopping) & MobileNetV2.
+        * **6. Evaluation & Real-time Demo:** Đánh giá độc lập trên tập Test, xuất Confusion Matrix, Classification Report & Demo dự đoán Streamlit.
         """)
 
     with col_r:
@@ -351,6 +352,35 @@ with nav_tabs[2]:
                 render_alert("Không có ảnh trong thư mục class này.", "info")
         else:
             render_alert(f"Thư mục class {selected_class} không tồn tại tại {class_dir}.", "info")
+
+        # ----------------------------------------------------
+        # 10 KỸ THUẬT TIỀN XỬ LÝ & TĂNG CƯỜNG DỮ LIỆU
+        # ----------------------------------------------------
+        st.markdown("<div class='section-header'>Danh Sách 10 Kỹ Thuật Tiền Xử Lý & Tăng Cường Dữ Liệu</div>", unsafe_allow_html=True)
+        st.markdown("""
+        | # | Kỹ thuật | Trạng thái | Vai trò & Tác dụng Kỹ thuật |
+        | :---: | :--- | :---: | :--- |
+        | **1** | **Resize ảnh về 32×32 (INTER_AREA)** |  Đang dùng | Chuẩn hóa kích thước đầu vào đồng nhất cho CNN & HOG. |
+        | **2** | **CLAHE trên kênh L của LAB** |  Đang dùng | Cải thiện tương phản cục bộ mà ít làm lệch màu (dành cho CNN & dự đoán real-time). |
+        | **3** | **Gamma Correction (Hiệu chỉnh Gamma)** |  Đã tích hợp | Điều chỉnh độ sáng toàn cục phi tuyến (Gamma > 1 làm sáng bóng râm, Gamma < 1 giảm chói). |
+        | **4** | **Unsharp Masking (Làm sắc nét cạnh)** |  Đã tích hợp | Tăng độ rõ của cạnh và chi tiết nhỏ (số 50/80 km/h, mũi tên, vạch chỉ dẫn). |
+        | **5** | **Chuẩn hóa pixel (/255 hoặc Z-score)** |  Đang dùng (/255) | Đưa dữ liệu về thang [0, 1] phù hợp với gradient descent; Z-score tính mean/std từ Train. |
+        | **6** | **Rotation ngẫu nhiên ±12°** |  Đang dùng (Augmentation) | Mô phỏng biển báo nghiêng nhẹ do góc đặt biển hoặc camera. |
+        | **7** | **Translation ngẫu nhiên ±3 px** |  Đang dùng (Augmentation) | Mô phỏng biển báo nằm lệch khỏi tâm khung hình. |
+        | **8** | **Thay đổi độ sáng & Gaussian Blur** |  Đang dùng (Augmentation) | Mô phỏng điều kiện ánh sáng thay đổi và hiện tượng mờ do sương mù/thời tiết. |
+        | **9** | **Perspective Transform (Phối cảnh)** |  Đã tích hợp (Augmentation) | Mô phỏng góc nhìn nghiêng thực tế của camera hành trình xe buýt/ô tô. |
+        | **10** | **Cutout / Random Erasing** |  Đã tích hợp (Augmentation) | Xóa ngẫu nhiên ô vuông nhỏ, buộc mô hình học ngữ cảnh toàn phần thay vì phụ thuộc 1 vùng. |
+        | **+** | **Motion Blur (Mờ chuyển động)** |  Đã tích hợp (Augmentation) | Mô phỏng hiện tượng mờ nét do phương tiện di chuyển với tốc độ cao. |
+        """)
+
+        st.markdown("<div class='section-header'>Kỹ Thuật Xử Lý Dữ Liệu Mất Cân Bằng (Imbalanced Data Sampling)</div>", unsafe_allow_html=True)
+        st.markdown("""
+        Do bộ dữ liệu GTSRB có sự chênh lệch lớn giữa các lớp (một số lớp có ~200 mẫu, một số có ~2,000 mẫu), hệ thống hỗ trợ 3 thuật toán lấy mẫu để cân bằng tập dữ liệu Train:
+        * **1. Random Undersampling:** Lấy mẫu ngẫu nhiên giảm số lượng của các lớp đa số về ngưỡng `min_count` tương đương lớp thiểu số.
+        * **2. NearMiss (NearMiss-1):** Giữ lại các mẫu thuộc lớp đa số có khoảng cách trung bình nhỏ nhất tới K mẫu thuộc lớp thiểu số kề cận (sử dụng K-NN).
+        * **3. Cluster Centroids:** Sử dụng thuật toán **K-Means** trên lớp đa số để thay thế các tập mẫu đa số bằng các tâm cụm (centroids), giúp bảo toàn đại diện không gian đặc trưng.
+        * **4. Class Weighting (Khuyên dùng cho CNN):** Tính trọng số ngược tỷ lệ xuất hiện $w_c = \frac{N}{K \cdot N_c}$ và truyền trực tiếp vào hàm mất mát Cross-Entropy trong quá trình huấn luyện CNN.
+        """)
 
     except Exception as e:
         render_alert(f"Lỗi khi tải dữ liệu dataset: {str(e)}", "warning")

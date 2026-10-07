@@ -151,6 +151,107 @@ def apply_clahe(image: np.ndarray, clip_limit: float = 2.0, tile_grid_size: Tupl
     return img_clahe
 
 
+def apply_gamma_correction(image: np.ndarray, gamma: float = 1.2) -> np.ndarray:
+    """
+    Applies Non-linear Gamma Correction to adjust global luminance/contrast.
+    Gamma > 1.0 brightens shadow areas; Gamma < 1.0 dims overexposed areas.
+    """
+    if image.dtype != np.uint8:
+        img_uint8 = np.clip(image * 255.0, 0, 255).astype(np.uint8) if image.max() <= 1.0 else image.astype(np.uint8)
+    else:
+        img_uint8 = image.copy()
+        
+    inv_gamma = 1.0 / max(gamma, 1e-5)
+    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    img_corrected = cv2.LUT(img_uint8, table)
+    
+    if image.dtype != np.uint8 and image.max() <= 1.0:
+        return img_corrected.astype(np.float32) / 255.0
+    return img_corrected
+
+
+def apply_unsharp_mask(image: np.ndarray, kernel_size: Tuple[int, int] = (5, 5), sigma: float = 1.0, amount: float = 1.5, threshold: int = 0) -> np.ndarray:
+    """
+    Applies Unsharp Masking edge sharpening.
+    Enhances fine details like numbers (e.g., speed limits), arrows, and symbols on traffic signs.
+    """
+    if image.dtype != np.uint8:
+        img_uint8 = np.clip(image * 255.0, 0, 255).astype(np.uint8) if image.max() <= 1.0 else image.astype(np.uint8)
+    else:
+        img_uint8 = image.copy()
+
+    blurred = cv2.GaussianBlur(img_uint8, kernel_size, sigma)
+    sharpened = cv2.addWeighted(img_uint8, 1.0 + amount, blurred, -amount, 0)
+    
+    if threshold > 0:
+        low_contrast_mask = np.abs(img_uint8.astype(np.int16) - blurred.astype(np.int16)) < threshold
+        np.copyto(sharpened, img_uint8, where=low_contrast_mask)
+        
+    if image.dtype != np.uint8 and image.max() <= 1.0:
+        return np.clip(sharpened.astype(np.float32) / 255.0, 0.0, 1.0)
+    return np.clip(sharpened, 0, 255).astype(np.uint8)
+
+
+def apply_perspective_transform(image: np.ndarray, max_warp: float = 0.10) -> np.ndarray:
+    """
+    Applies random perspective transform augmentation.
+    Simulates camera viewing angles and tilted roadside perspective distortions.
+    """
+    h, w = image.shape[:2]
+    dx = w * max_warp
+    dy = h * max_warp
+    
+    pts1 = np.float32([[0, 0], [w, 0], [0, h], [w, h]])
+    pts2 = np.float32([
+        [np.random.uniform(-dx, dx), np.random.uniform(-dy, dy)],
+        [w + np.random.uniform(-dx, dx), np.random.uniform(-dy, dy)],
+        [np.random.uniform(-dx, dx), h + np.random.uniform(-dy, dy)],
+        [w + np.random.uniform(-dx, dx), h + np.random.uniform(-dy, dy)]
+    ])
+    
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+    warped = cv2.warpPerspective(image, M, (w, h), borderMode=cv2.BORDER_REFLECT_101)
+    return warped
+
+
+def apply_cutout(image: np.ndarray, n_holes: int = 1, length: int = 8) -> np.ndarray:
+    """
+    Applies Cutout / Random Erasing augmentation.
+    Fills random square region(s) with zero/mean values to force CNN to rely on full sign context.
+    """
+    h, w = image.shape[:2]
+    img_cut = image.copy()
+    
+    for _ in range(n_holes):
+        y = np.random.randint(0, h)
+        x = np.random.randint(0, w)
+        
+        y1 = np.clip(y - length // 2, 0, h)
+        y2 = np.clip(y + length // 2, 0, h)
+        x1 = np.clip(x - length // 2, 0, w)
+        x2 = np.clip(x + length // 2, 0, w)
+        
+        img_cut[y1:y2, x1:x2] = 0
+        
+    return img_cut
+
+
+def apply_motion_blur(image: np.ndarray, kernel_size: int = 5) -> np.ndarray:
+    """
+    Applies directional motion blur convolution.
+    Simulates camera motion blur when captured from a moving vehicle.
+    """
+    kernel = np.zeros((kernel_size, kernel_size))
+    if np.random.rand() > 0.5:
+        kernel[int((kernel_size - 1) / 2), :] = np.ones(kernel_size)
+    else:
+        np.fill_diagonal(kernel, 1)
+    kernel /= kernel_size
+    
+    blurred = cv2.filter2D(image, -1, kernel)
+    return blurred
+
+
 def normalize_pixels(images: np.ndarray) -> np.ndarray:
     """
     Normalizes pixel values from [0, 255] to [0.0, 1.0] float32.
@@ -159,6 +260,108 @@ def normalize_pixels(images: np.ndarray) -> np.ndarray:
     if images_arr.max() > 1.0:
         images_arr /= 255.0
     return images_arr
+
+
+def normalize_zscore(images: np.ndarray, mean: Optional[np.ndarray] = None, std: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Applies Per-Channel Z-score Normalization (X - Mean) / (Std + 1e-7).
+    Returns (normalized_images, train_mean, train_std).
+    Calculates mean and std from Training set only to prevent data leakage.
+    """
+    images_arr = np.asarray(images, dtype=np.float32)
+    if mean is None:
+        mean = np.mean(images_arr, axis=(0, 1, 2), keepdims=True)
+    if std is None:
+        std = np.std(images_arr, axis=(0, 1, 2), keepdims=True)
+        
+    normalized = (images_arr - mean) / (std + 1e-7)
+    return normalized, mean, std
+
+
+def apply_imbalanced_sampling(
+    X: np.ndarray,
+    y: np.ndarray,
+    method: str = "none",
+    target_samples_per_class: Optional[int] = None,
+    random_state: int = RANDOM_STATE
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Applies class balancing techniques for imbalanced datasets (e.g. GTSRB):
+    - 'random_undersample': Randomly samples majority classes down to target count.
+    - 'nearmiss': Keeps majority class samples closest to minority class samples using K-NN logic.
+    - 'cluster_centroids': Replaces majority class samples with KMeans cluster centroids.
+    - 'none': Returns original X, y unmodified.
+    """
+    if method == "none" or method is None:
+        return X, y
+        
+    np.random.seed(random_state)
+    classes, counts = np.unique(y, return_counts=True)
+    min_count = int(np.min(counts)) if target_samples_per_class is None else target_samples_per_class
+    
+    X_resampled = []
+    y_resampled = []
+    
+    is_image = (X.ndim == 4)
+    orig_shape = X.shape
+    if is_image:
+        X_flat = X.reshape(len(X), -1)
+    else:
+        X_flat = X
+        
+    if method == "random_undersample":
+        for c in classes:
+            idx = np.where(y == c)[0]
+            if len(idx) > min_count:
+                selected_idx = np.random.choice(idx, size=min_count, replace=False)
+            else:
+                selected_idx = idx
+            X_resampled.append(X[selected_idx])
+            y_resampled.append(y[selected_idx])
+        return np.concatenate(X_resampled, axis=0), np.concatenate(y_resampled, axis=0)
+        
+    elif method == "nearmiss":
+        from sklearn.neighbors import NearestNeighbors
+        minority_class = classes[np.argmin(counts)]
+        minority_idx = np.where(y == minority_class)[0]
+        minority_samples = X_flat[minority_idx]
+        
+        nn = NearestNeighbors(n_neighbors=min(5, len(minority_samples)))
+        nn.fit(minority_samples)
+        
+        for c in classes:
+            idx = np.where(y == c)[0]
+            if len(idx) > min_count:
+                distances, _ = nn.kneighbors(X_flat[idx])
+                mean_dist = np.mean(distances, axis=1)
+                selected_sub_idx = np.argsort(mean_dist)[:min_count]
+                selected_idx = idx[selected_sub_idx]
+            else:
+                selected_idx = idx
+            X_resampled.append(X[selected_idx])
+            y_resampled.append(y[selected_idx])
+        return np.concatenate(X_resampled, axis=0), np.concatenate(y_resampled, axis=0)
+        
+    elif method == "cluster_centroids":
+        from sklearn.cluster import KMeans
+        for c in classes:
+            idx = np.where(y == c)[0]
+            if len(idx) > min_count:
+                kmeans = KMeans(n_clusters=min_count, random_state=random_state, n_init=3)
+                kmeans.fit(X_flat[idx])
+                centroids = kmeans.cluster_centers_
+                if is_image:
+                    centroids = centroids.reshape((min_count,) + orig_shape[1:])
+                X_resampled.append(centroids.astype(X.dtype))
+                y_resampled.append(np.full(min_count, c))
+            else:
+                X_resampled.append(X[idx])
+                y_resampled.append(y[idx])
+        return np.concatenate(X_resampled, axis=0), np.concatenate(y_resampled, axis=0)
+        
+    else:
+        logger.warning(f"Unknown sampling method '{method}'. Returning original dataset.")
+        return X, y
 
 
 def prepare_image_pipeline(image_input: Union[str, Path, np.ndarray, bytes], target_size: Tuple[int, int] = IMAGE_SIZE) -> np.ndarray:
@@ -184,12 +387,10 @@ def split_data(
     Splits data into Train (70%), Validation (15%), and Test (15%) sets without data leakage.
     Splitting occurs BEFORE any data augmentation.
     """
-    # 1. Separate Test Set (15%)
     X_temp, X_test, y_temp, y_test = train_test_split(
         images, labels, test_size=test_ratio, random_state=random_state, stratify=labels
     )
     
-    # 2. Separate Validation Set (15% / (70% + 15%) = 0.1765 of remaining temp data)
     val_adjusted_ratio = val_ratio / (1.0 - test_ratio)
     X_train, X_val, y_train, y_val = train_test_split(
         X_temp, y_temp, test_size=val_adjusted_ratio, random_state=random_state, stratify=y_temp
@@ -204,32 +405,46 @@ def split_data(
 def augment_single_image(image: np.ndarray) -> np.ndarray:
     """
     Applies realistic random data augmentation FOR TRAINING DATA ONLY:
+    - Perspective transform (camera tilt simulation)
     - Rotation (-12 to +12 degrees)
-    - Translation (shift)
+    - Translation (shift ±3 px)
     - Brightness/contrast scaling (simulates day/night/glare)
-    - Mild Gaussian blur / noise (simulates rain/fog/blur)
+    - Motion blur or Gaussian blur (weather & speed blur simulation)
+    - Cutout / Random erasing (occlusion simulation)
     NO horizontal flip (preserves directional traffic sign meanings).
     """
     h, w = image.shape[:2]
+    aug = image.copy()
     
-    # Random rotation
+    # 1. Perspective Transform (25% chance)
+    if np.random.rand() < 0.25:
+        aug = apply_perspective_transform(aug, max_warp=0.10)
+
+    # 2. Random rotation (-12 to +12 degrees)
     angle = np.random.uniform(-12, 12)
     M_rot = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
-    aug = cv2.warpAffine(image, M_rot, (w, h), borderMode=cv2.BORDER_REFLECT_101)
+    aug = cv2.warpAffine(aug, M_rot, (w, h), borderMode=cv2.BORDER_REFLECT_101)
     
-    # Random shift
+    # 3. Random shift
     tx = np.random.randint(-3, 4)
     ty = np.random.randint(-3, 4)
     M_shift = np.float32([[1, 0, tx], [0, 1, ty]])
     aug = cv2.warpAffine(aug, M_shift, (w, h), borderMode=cv2.BORDER_REFLECT_101)
 
-    # Random brightness/contrast adjustment
+    # 4. Random brightness/contrast adjustment
     brightness_factor = np.random.uniform(0.8, 1.2)
     aug = np.clip(aug.astype(np.float32) * brightness_factor, 0, 255 if aug.max() > 1.0 else 1.0)
 
-    # Weather simulation: 30% chance of mild blur/noise
+    # 5. Motion blur or Gaussian blur (30% chance)
     if np.random.rand() < 0.3:
-        aug = cv2.GaussianBlur(aug.astype(np.uint8), (3, 3), 0)
+        if np.random.rand() < 0.5:
+            aug = cv2.GaussianBlur(aug.astype(np.uint8), (3, 3), 0)
+        else:
+            aug = apply_motion_blur(aug.astype(np.uint8), kernel_size=3)
+
+    # 6. Cutout / Random Erasing (20% chance)
+    if np.random.rand() < 0.20:
+        aug = apply_cutout(aug, n_holes=1, length=6)
     
     return aug.astype(image.dtype)
 
