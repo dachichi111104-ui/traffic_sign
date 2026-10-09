@@ -168,10 +168,22 @@ def plot_and_save_training_curves(history_dict: dict):
     logger.info(f"Saved training history curves to {RESULT_DIR}")
 
 
-def train_cnn(dataset_dir: Path = None, retrain: bool = False, model_type: str = "custom"):
+def train_cnn(
+    dataset_dir: Path = None,
+    retrain: bool = False,
+    model_type: str = "custom",
+    use_gamma: bool = False,
+    use_unsharp: bool = False,
+    use_zscore: bool = False,
+    sampling_method: str = "none"
+):
     """
     Train CNN model with EarlyStopping, ModelCheckpoint, and ReduceLROnPlateau.
-    Dynamically adapts num_classes to any dataset (Vietnamese or GTSRB).
+    Supports optional experimental preprocessing & augmentation flags:
+    - use_gamma: apply Gamma Correction
+    - use_unsharp: apply Unsharp Masking
+    - use_zscore: apply per-channel Z-score normalization
+    - sampling_method: 'random_undersample', 'nearmiss', 'cluster_centroids', 'none'
     """
     if CNN_MODEL_PATH.exists() and not retrain:
         logger.info(f"CNN model already exists at {CNN_MODEL_PATH}. Loading existing model.")
@@ -182,17 +194,34 @@ def train_cnn(dataset_dir: Path = None, retrain: bool = False, model_type: str =
 
     logger.info("--- Starting CNN Model Training ---")
     
-    # 1. Load Dataset & Apply CLAHE
+    # 1. Load Dataset & Apply Base Preprocessing (Resize + CLAHE + Optional Gamma/Unsharp)
     images_raw, labels, stats = load_raw_dataset(dataset_dir=dataset_dir)
-    images_clahe = [apply_clahe(resize_image(img, (32, 32))) for img in images_raw]
+    images_processed = []
+    for img in images_raw:
+        img_p = resize_image(img, (32, 32))
+        img_p = apply_clahe(img_p)
+        if use_gamma:
+            from src.preprocessing import apply_gamma_correction
+            img_p = apply_gamma_correction(img_p)
+        if use_unsharp:
+            from src.preprocessing import apply_unsharp_mask
+            img_p = apply_unsharp_mask(img_p)
+        images_processed.append(img_p)
     
     num_classes = stats["total_classes"]
     logger.info(f"Dataset has {num_classes} classes.")
 
     # 2. Strict Train / Val / Test Split (70% / 15% / 15%) BEFORE augmentation
     X_train_raw, X_val_raw, X_test_raw, y_train, y_val, y_test = split_data(
-        images_clahe, labels, test_ratio=TEST_RATIO, val_ratio=VAL_RATIO, random_state=RANDOM_STATE
+        images_processed, labels, test_ratio=TEST_RATIO, val_ratio=VAL_RATIO, random_state=RANDOM_STATE
     )
+
+    # Optional Imbalanced Data Sampling
+    if sampling_method != "none":
+        from src.preprocessing import apply_imbalanced_sampling
+        logger.info(f"Applying imbalanced sampling method: {sampling_method}")
+        X_train_raw, y_train = apply_imbalanced_sampling(np.array(X_train_raw), y_train, method=sampling_method)
+        X_train_raw = list(X_train_raw)
 
     # Calculate class weights to handle data imbalance
     class_weights_arr = compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
@@ -211,10 +240,17 @@ def train_cnn(dataset_dir: Path = None, retrain: bool = False, model_type: str =
     X_train_raw = np.array(X_train_aug)
     y_train = np.array(y_train_aug)
 
-    # Normalize pixel values
-    X_train = normalize_pixels(X_train_raw)
-    X_val = normalize_pixels(X_val_raw)
-    X_test = normalize_pixels(X_test_raw)
+    # Normalize pixel values (/255 or Z-score)
+    if use_zscore:
+        from src.preprocessing import normalize_zscore
+        logger.info("Applying per-channel Z-score normalization...")
+        X_train, train_mean, train_std = normalize_zscore(X_train_raw)
+        X_val, _, _ = normalize_zscore(X_val_raw, train_mean, train_std)
+        X_test, _, _ = normalize_zscore(X_test_raw, train_mean, train_std)
+    else:
+        X_train = normalize_pixels(X_train_raw)
+        X_val = normalize_pixels(X_val_raw)
+        X_test = normalize_pixels(X_test_raw)
 
     # Save class mapping
     CLASS_MAPPING_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -270,7 +306,11 @@ def train_cnn(dataset_dir: Path = None, retrain: bool = False, model_type: str =
         "trained_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "epochs_run": len(history_dict['accuracy']),
         "final_train_acc": round(history_dict['accuracy'][-1], 4),
-        "final_val_acc": round(history_dict['val_accuracy'][-1], 4)
+        "final_val_acc": round(history_dict['val_accuracy'][-1], 4),
+        "use_gamma": use_gamma,
+        "use_unsharp": use_unsharp,
+        "use_zscore": use_zscore,
+        "sampling_method": sampling_method
     }
     with open(MODEL_METADATA_PATH, 'w', encoding='utf-8') as f:
         json.dump(metadata, f, indent=4, ensure_ascii=False)
@@ -286,6 +326,16 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--retrain", action="store_true", help="Force retrain CNN model")
+    parser.add_argument("--use-gamma", action="store_true", help="Apply Gamma Correction")
+    parser.add_argument("--use-unsharp", action="store_true", help="Apply Unsharp Masking")
+    parser.add_argument("--use-zscore", action="store_true", help="Apply Z-score normalization")
+    parser.add_argument("--sampling", type=str, default="none", choices=["none", "random_undersample", "nearmiss", "cluster_centroids"], help="Imbalanced sampling method")
     args = parser.parse_args()
     
-    train_cnn(retrain=args.retrain)
+    train_cnn(
+        retrain=args.retrain,
+        use_gamma=args.use_gamma,
+        use_unsharp=args.use_unsharp,
+        use_zscore=args.use_zscore,
+        sampling_method=args.sampling
+    )
