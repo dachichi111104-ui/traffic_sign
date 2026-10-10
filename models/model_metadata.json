@@ -2,8 +2,21 @@
     "dataset_path": "C:\\Downloads\\sigange\\data\\raw\\GTSRB\\Train",
     "is_sample_dataset": false,
     "num_classes": 43,
-    "trained_timestamp": "2026-10-08 03:55:52",
-    "epochs_run": 24,
-    "final_train_acc": 0.9935,
-    "final_val_acc": 0.9983
+    "trained_timestamp": "2026-10-10 00:22:03",
+    "epochs_run": 47,
+    "final_train_acc": 0.8758,
+    "final_val_acc": 0.9986,
+    "preprocessing_config": {
+        "use_clahe": true,
+        "use_gamma": false,
+        "use_unsharp": false,
+        "norm_type": "minmax",
+        "target_size": [
+            32,
+            32
+        ],
+        "train_mean": null,
+        "train_std": null,
+        "sampling_method": "none"
+    }
 }

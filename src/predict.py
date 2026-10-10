@@ -47,26 +47,43 @@ def get_svm_model():
     return _SVM_MODEL
 
 
+from src.config import (
+    CNN_MODEL_PATH, SVM_MODEL_PATH, CLASS_MAPPING_PATH, GTSRB_CLASSES, IMAGE_SIZE, EXTERNAL_TEST_DIR, MODEL_METADATA_PATH
+)
+
+
+def get_model_preprocessing_config() -> Dict:
+    if MODEL_METADATA_PATH.exists():
+        try:
+            with open(MODEL_METADATA_PATH, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+                return meta.get("preprocessing_config", {})
+        except Exception:
+            pass
+    return {
+        "use_clahe": True,
+        "use_gamma": False,
+        "use_unsharp": False,
+        "norm_type": "minmax",
+        "train_mean": None,
+        "train_std": None
+    }
+
+
 def predict_traffic_sign(
     image_input: Union[str, Path, np.ndarray, bytes],
     model_type: str = "CNN"
 ) -> Dict:
     """
     Inference pipeline:
-    Image -> Preprocessing -> Model -> Softmax/Probabilities -> Structured Output
-    
-    Returns dictionary with:
-        - class_id: int
-        - name_vi: str
-        - name_en: str
-        - confidence: float (0 - 100 %)
-        - top_3: List[Dict] with class_id, name_vi, name_en, confidence
+    Image -> Preprocessing (matching model metadata config) -> Model -> Softmax/Probabilities -> Structured Output
     """
     img_rgb = load_image(image_input)
     
     if model_type.upper() == "CNN":
         model = get_cnn_model()
-        processed_tensor = prepare_image_pipeline(img_rgb, target_size=IMAGE_SIZE)
+        cfg = get_model_preprocessing_config()
+        processed_tensor = prepare_image_pipeline(img_rgb, target_size=IMAGE_SIZE, preprocessing_config=cfg)
         probs = model.predict(processed_tensor, verbose=0)[0]
     elif model_type.upper() in ["SVM", "HOG + SVM"]:
         model = get_svm_model()

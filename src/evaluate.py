@@ -137,18 +137,59 @@ def evaluate_models(dataset_dir: Path = None) -> Dict:
     - confusion_matrix_svm.png
     - misclassified images & json
     """
+from src.config import (
+    CNN_MODEL_PATH, SVM_MODEL_PATH, RESULT_DIR, MISCLASSIFIED_DIR,
+    GTSRB_CLASSES, RANDOM_STATE, TEST_RATIO, VAL_RATIO, MODEL_METADATA_PATH,
+    CONFUSION_MATRIX_CNN_PATH, CONFUSION_MATRIX_SVM_PATH, COMPARISON_CSV_PATH
+)
+from src.data_loader import load_raw_dataset
+from src.preprocessing import split_data, resize_image, preprocess_dataset_batch
+from src.feature_extraction import extract_hog_batch
+
+
+def evaluate_models(dataset_dir: Path = None) -> Dict:
+    """
+    Evaluates both CNN and HOG+SVM models strictly on held-out Test set.
+    Reads preprocessing_config from model_metadata.json to ensure exact test pipeline alignment.
+    """
     logger.info("--- Starting Comprehensive Model Evaluation on Test Set ---")
     
-    # 1. Load Dataset
+    # 1. Load Dataset & Metadata Configuration
     images_raw, labels, stats = load_raw_dataset(dataset_dir=dataset_dir)
-    images_resized = [resize_image(img, (32, 32)) for img in images_raw]
 
-    # 2. Strict Train/Val/Test Split (70/15/15)
+    cfg = {
+        "use_clahe": True,
+        "use_gamma": False,
+        "use_unsharp": False,
+        "norm_type": "minmax",
+        "train_mean": None,
+        "train_std": None
+    }
+    if MODEL_METADATA_PATH.exists():
+        try:
+            with open(MODEL_METADATA_PATH, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+                cfg.update(meta.get("preprocessing_config", {}))
+                logger.info(f"Loaded model preprocessing metadata config: {cfg}")
+        except Exception as e:
+            logger.warning(f"Could not read model metadata: {e}. Using default preprocessing config.")
+
+    # 2. Strict Train/Val/Test Split (70/15/15) BEFORE any augmentation or sampling
     X_train_raw, X_val_raw, X_test_raw, y_train, y_val, y_test = split_data(
-        images_resized, labels, test_ratio=TEST_RATIO, val_ratio=VAL_RATIO, random_state=RANDOM_STATE
+        images_raw, labels, test_ratio=TEST_RATIO, val_ratio=VAL_RATIO, random_state=RANDOM_STATE
     )
 
-    X_test_norm = normalize_pixels(X_test_raw)
+    # 3. Preprocess Test Set using exact trained model configuration & train_mean/train_std
+    X_test_norm, _, _ = preprocess_dataset_batch(
+        X_test_raw,
+        use_clahe=cfg.get("use_clahe", True),
+        use_gamma=cfg.get("use_gamma", False),
+        use_unsharp=cfg.get("use_unsharp", False),
+        norm_type=cfg.get("norm_type", "minmax"),
+        mean=cfg.get("train_mean"),
+        std=cfg.get("train_std")
+    )
+
     RESULT_DIR.mkdir(parents=True, exist_ok=True)
 
     comparison_rows = []

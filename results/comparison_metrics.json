@@ -1,63 +1,63 @@
 {
     "CNN": {
         "model": "CNN",
-        "accuracy": 0.8383,
-        "precision_weighted": 0.896,
-        "recall_weighted": 0.8383,
-        "f1_score_weighted": 0.8514,
-        "precision_macro": 0.9019,
-        "recall_macro": 0.8519,
-        "f1_score_macro": 0.8593,
+        "accuracy": 0.9988,
+        "precision_weighted": 0.9988,
+        "recall_weighted": 0.9988,
+        "f1_score_weighted": 0.9988,
+        "precision_macro": 0.9994,
+        "recall_macro": 0.9994,
+        "f1_score_macro": 0.9994,
         "num_test_samples": 5882,
         "is_sample_dataset": false,
         "top_confused_pairs": [
             {
-                "true_class": 10,
-                "true_name": "Cấm xe tải vượt (P.126)",
-                "pred_class": 8,
-                "pred_name": "Giới hạn tốc độ 120km/h",
-                "count": 47
-            },
-            {
-                "true_class": 4,
-                "true_name": "Giới hạn tốc độ 70km/h (P.127)",
-                "pred_class": 8,
-                "pred_name": "Giới hạn tốc độ 120km/h",
-                "count": 44
-            },
-            {
                 "true_class": 5,
                 "true_name": "Giới hạn tốc độ 80km/h (P.127)",
-                "pred_class": 8,
-                "pred_name": "Giới hạn tốc độ 120km/h",
-                "count": 32
+                "pred_class": 2,
+                "pred_name": "Giới hạn tốc độ 50km/h (P.127)",
+                "count": 2
             },
             {
-                "true_class": 10,
-                "true_name": "Cấm xe tải vượt (P.126)",
-                "pred_class": 9,
-                "pred_name": "Cấm vượt (P.125)",
-                "count": 32
+                "true_class": 1,
+                "true_name": "Giới hạn tốc độ 30km/h (P.127)",
+                "pred_class": 5,
+                "pred_name": "Giới hạn tốc độ 80km/h (P.127)",
+                "count": 1
             },
             {
-                "true_class": 38,
-                "true_name": "Đi bên phải (R.302a)",
-                "pred_class": 8,
-                "pred_name": "Giới hạn tốc độ 120km/h",
-                "count": 26
+                "true_class": 2,
+                "true_name": "Giới hạn tốc độ 50km/h (P.127)",
+                "pred_class": 1,
+                "pred_name": "Giới hạn tốc độ 30km/h (P.127)",
+                "count": 1
+            },
+            {
+                "true_class": 2,
+                "true_name": "Giới hạn tốc độ 50km/h (P.127)",
+                "pred_class": 4,
+                "pred_name": "Giới hạn tốc độ 70km/h (P.127)",
+                "count": 1
+            },
+            {
+                "true_class": 3,
+                "true_name": "Giới hạn tốc độ 60km/h (P.127)",
+                "pred_class": 5,
+                "pred_name": "Giới hạn tốc độ 80km/h (P.127)",
+                "count": 1
             }
         ],
-        "num_misclassified": 951
+        "num_misclassified": 7
     },
     "HOG + SVM": {
         "model": "HOG + SVM",
-        "accuracy": 0.9696,
-        "precision_weighted": 0.9698,
-        "recall_weighted": 0.9696,
-        "f1_score_weighted": 0.9695,
-        "precision_macro": 0.9813,
-        "recall_macro": 0.9747,
-        "f1_score_macro": 0.9778,
+        "accuracy": 0.9709,
+        "precision_weighted": 0.9713,
+        "recall_weighted": 0.9709,
+        "f1_score_weighted": 0.9709,
+        "precision_macro": 0.9818,
+        "recall_macro": 0.9738,
+        "f1_score_macro": 0.9774,
         "num_test_samples": 5882,
         "is_sample_dataset": false
     }

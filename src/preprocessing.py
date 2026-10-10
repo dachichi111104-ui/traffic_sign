@@ -364,15 +364,148 @@ def apply_imbalanced_sampling(
         return X, y
 
 
-def prepare_image_pipeline(image_input: Union[str, Path, np.ndarray, bytes], target_size: Tuple[int, int] = IMAGE_SIZE) -> np.ndarray:
+def preprocess_single_image(
+    image_input: Union[str, Path, np.ndarray, bytes],
+    target_size: Tuple[int, int] = IMAGE_SIZE,
+    use_clahe: bool = True,
+    use_gamma: bool = False,
+    use_unsharp: bool = False,
+    norm_type: str = "minmax",
+    mean: Optional[Union[np.ndarray, List[float]]] = None,
+    std: Optional[Union[np.ndarray, List[float]]] = None,
+    gamma_val: float = 1.2
+) -> np.ndarray:
     """
-    Complete inference preprocessing pipeline for a single image:
-    Input -> RGB -> Resize (32x32) -> CLAHE -> Normalize -> (1, 32, 32, 3)
+    Unified sequential preprocessing pipeline for a single image:
+    1. Read / Convert RGB (load_image)
+    2. Resize to 32x32 (resize_image)
+    3. Optional CLAHE (apply_clahe)
+    4. Optional Gamma Correction (apply_gamma_correction)
+    5. Optional Unsharp Masking (apply_unsharp_mask)
+    6. Normalization (minmax /255 OR per-channel Z-score with train mean/std)
     """
-    img_rgb = load_image(image_input)
-    img_resized = resize_image(img_rgb, target_size=target_size)
-    img_clahe = apply_clahe(img_resized)
-    img_norm = normalize_pixels(img_clahe)
+    # 1. Load RGB
+    img = load_image(image_input)
+    # 2. Resize
+    img = resize_image(img, target_size=target_size)
+    # 3. CLAHE
+    if use_clahe:
+        img = apply_clahe(img)
+    # 4. Gamma Correction
+    if use_gamma:
+        img = apply_gamma_correction(img, gamma=gamma_val)
+    # 5. Unsharp Mask
+    if use_unsharp:
+        img = apply_unsharp_mask(img)
+    # 6. Normalization
+    img_float = img.astype(np.float32) if img.dtype != np.float32 else img.copy()
+    if norm_type == "zscore":
+        if mean is None or std is None:
+            m = np.mean(img_float, axis=(0, 1), keepdims=True)
+            s = np.std(img_float, axis=(0, 1), keepdims=True)
+        else:
+            m = np.array(mean, dtype=np.float32)
+            s = np.array(std, dtype=np.float32)
+            if m.ndim == 1:
+                m = m.reshape(1, 1, -1)
+            if s.ndim == 1:
+                s = s.reshape(1, 1, -1)
+        img_norm = (img_float - m) / (s + 1e-7)
+    else:
+        if img_float.max() > 1.0:
+            img_norm = img_float / 255.0
+        else:
+            img_norm = img_float
+
+    return img_norm
+
+
+def preprocess_dataset_batch(
+    images: List[np.ndarray],
+    target_size: Tuple[int, int] = IMAGE_SIZE,
+    use_clahe: bool = True,
+    use_gamma: bool = False,
+    use_unsharp: bool = False,
+    norm_type: str = "minmax",
+    mean: Optional[Union[np.ndarray, List[float]]] = None,
+    std: Optional[Union[np.ndarray, List[float]]] = None
+) -> Tuple[np.ndarray, Optional[List[float]], Optional[List[float]]]:
+    """
+    Applies the unified sequential preprocessing pipeline to a dataset batch.
+    If norm_type == 'zscore' and mean is None:
+        Calculates mean and std from this batch (Train set) and returns them as python lists.
+    Returns: (processed_images_array, train_mean_list, train_std_list)
+    """
+    processed_list = []
+    for img in images:
+        p_img = load_image(img)
+        p_img = resize_image(p_img, target_size=target_size)
+        if use_clahe:
+            p_img = apply_clahe(p_img)
+        if use_gamma:
+            p_img = apply_gamma_correction(p_img)
+        if use_unsharp:
+            p_img = apply_unsharp_mask(p_img)
+        processed_list.append(p_img.astype(np.float32))
+
+    batch_arr = np.array(processed_list, dtype=np.float32)
+
+    calc_mean = None
+    calc_std = None
+
+    if norm_type == "zscore":
+        if mean is None or std is None:
+            c_mean = np.mean(batch_arr, axis=(0, 1, 2), keepdims=True)
+            c_std = np.std(batch_arr, axis=(0, 1, 2), keepdims=True)
+            calc_mean = c_mean.flatten().tolist()
+            calc_std = c_std.flatten().tolist()
+            m = c_mean
+            s = c_std
+        else:
+            m = np.array(mean, dtype=np.float32).reshape(1, 1, 1, -1)
+            s = np.array(std, dtype=np.float32).reshape(1, 1, 1, -1)
+            calc_mean = list(mean) if isinstance(mean, (list, tuple)) else mean.flatten().tolist()
+            calc_std = list(std) if isinstance(std, (list, tuple)) else std.flatten().tolist()
+        
+        batch_norm = (batch_arr - m) / (s + 1e-7)
+    else:
+        if batch_arr.max() > 1.0:
+            batch_norm = batch_arr / 255.0
+        else:
+            batch_norm = batch_arr
+
+    return batch_norm, calc_mean, calc_std
+
+
+def prepare_image_pipeline(
+    image_input: Union[str, Path, np.ndarray, bytes],
+    target_size: Tuple[int, int] = IMAGE_SIZE,
+    preprocessing_config: Optional[dict] = None
+) -> np.ndarray:
+    """
+    Complete inference preprocessing pipeline for a single image.
+    Uses metadata preprocessing_config if provided.
+    """
+    if preprocessing_config is None:
+        preprocessing_config = {
+            "use_clahe": True,
+            "use_gamma": False,
+            "use_unsharp": False,
+            "norm_type": "minmax",
+            "train_mean": None,
+            "train_std": None
+        }
+
+    img_norm = preprocess_single_image(
+        image_input,
+        target_size=target_size,
+        use_clahe=preprocessing_config.get("use_clahe", True),
+        use_gamma=preprocessing_config.get("use_gamma", False),
+        use_unsharp=preprocessing_config.get("use_unsharp", False),
+        norm_type=preprocessing_config.get("norm_type", "minmax"),
+        mean=preprocessing_config.get("train_mean"),
+        std=preprocessing_config.get("train_std")
+    )
     return np.expand_dims(img_norm, axis=0)
 
 
