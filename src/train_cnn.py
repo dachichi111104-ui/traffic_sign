@@ -170,7 +170,7 @@ def plot_and_save_training_curves(history_dict: dict):
 
 from src.preprocessing import (
     split_data, resize_image, augment_single_image, apply_clahe,
-    preprocess_dataset_batch, apply_imbalanced_sampling
+    preprocess_dataset_features, normalize_dataset, apply_imbalanced_sampling
 )
 
 
@@ -190,10 +190,10 @@ def train_cnn(
     Sequential Pipeline:
     1. Load Raw Dataset -> RGB
     2. Split Train (70%) / Val (15%) / Test (15%) BEFORE augmentation & sampling
-    3. Preprocess Train set via preprocess_dataset_batch (obtains train_mean & train_std if zscore)
-    4. Preprocess Val & Test sets using the exact train_mean & train_std
-    5. Apply imbalanced sampling ONLY to Train set
-    6. Apply data augmentation ONLY to Train set
+    3. Preprocess spatial/color features (Resize -> CLAHE -> Gamma -> Unsharp) to clean uint8 [0, 255]
+    4. Apply sampling ONLY to Train set (in uint8 [0, 255])
+    5. Apply data augmentation ONLY to Train set (in uint8 [0, 255], ensuring blur never damages normalized floats)
+    6. Normalize datasets (/255 or Z-score) at the very end
     7. Save complete preprocessing_config & train statistics to model_metadata.json
     """
     requested_config = {
@@ -227,7 +227,7 @@ def train_cnn(
             logger.warning(f"Could not verify existing model metadata: {e}. Retraining...")
             retrain = True
 
-    logger.info("--- Starting CNN Model Training (Strict Sequential Pipeline) ---")
+    logger.info("--- Starting CNN Model Training (Strict Sequential Pipeline: Augment on uint8 -> Normalize) ---")
     
     # 1. Load Raw Dataset (RGB)
     images_raw, labels, stats = load_raw_dataset(dataset_dir=dataset_dir)
@@ -239,59 +239,57 @@ def train_cnn(
         images_raw, labels, test_ratio=TEST_RATIO, val_ratio=VAL_RATIO, random_state=RANDOM_STATE
     )
 
-    # 3. Preprocess Train set first -> calculates train_mean & train_std if Z-score
-    logger.info(f"Preprocessing Train batch (CLAHE={use_clahe}, Gamma={use_gamma}, Unsharp={use_unsharp}, Norm={norm_type})...")
-    X_train_p, train_mean, train_std = preprocess_dataset_batch(
+    # 3. Preprocess spatial/color features in uint8 [0, 255] (BEFORE augmentation & normalization)
+    logger.info(f"Preprocessing feature maps in uint8 [0, 255] (CLAHE={use_clahe}, Gamma={use_gamma}, Unsharp={use_unsharp})...")
+    X_train_feat = preprocess_dataset_features(
         X_train_raw,
+        target_size=(32, 32),
         use_clahe=use_clahe,
         use_gamma=use_gamma,
-        use_unsharp=use_unsharp,
-        norm_type=norm_type,
-        mean=None,
-        std=None
+        use_unsharp=use_unsharp
     )
-
-    # 4. Preprocess Val & Test sets using EXACT train_mean & train_std
-    X_val, _, _ = preprocess_dataset_batch(
+    X_val_feat = preprocess_dataset_features(
         X_val_raw,
+        target_size=(32, 32),
         use_clahe=use_clahe,
         use_gamma=use_gamma,
-        use_unsharp=use_unsharp,
-        norm_type=norm_type,
-        mean=train_mean,
-        std=train_std
+        use_unsharp=use_unsharp
     )
-    X_test, _, _ = preprocess_dataset_batch(
+    X_test_feat = preprocess_dataset_features(
         X_test_raw,
+        target_size=(32, 32),
         use_clahe=use_clahe,
         use_gamma=use_gamma,
-        use_unsharp=use_unsharp,
-        norm_type=norm_type,
-        mean=train_mean,
-        std=train_std
+        use_unsharp=use_unsharp
     )
 
-    # 5. Apply Imbalanced Sampling STRICTLY to Train set ONLY
+    # 4. Apply Imbalanced Sampling STRICTLY to Train set ONLY (in uint8 [0, 255])
     if sampling_method != "none":
         logger.info(f"Applying imbalanced sampling ({sampling_method}) STRICTLY to Training set...")
-        X_train_p, y_train = apply_imbalanced_sampling(X_train_p, y_train, method=sampling_method)
+        X_train_feat, y_train = apply_imbalanced_sampling(X_train_feat, y_train, method=sampling_method)
 
     # Calculate class weights for loss function
     class_weights_arr = compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
     class_weight_dict = dict(enumerate(class_weights_arr))
 
-    # 6. Apply Data Augmentation STRICTLY to Train set ONLY
-    logger.info("Applying data augmentation STRICTLY to training set...")
+    # 5. Apply Data Augmentation on uint8 [0, 255] BEFORE Normalization (prevents blur from corrupting normalized floats)
+    logger.info("Applying data augmentation on uint8 images BEFORE normalization...")
     X_train_aug = []
     y_train_aug = []
-    for img, lbl in zip(X_train_p, y_train):
+    for img, lbl in zip(X_train_feat, y_train):
         X_train_aug.append(img)
         y_train_aug.append(lbl)
         X_train_aug.append(augment_single_image(img))
         y_train_aug.append(lbl)
 
-    X_train = np.array(X_train_aug, dtype=np.float32)
+    X_train_aug = np.array(X_train_aug, dtype=np.uint8)
     y_train = np.array(y_train_aug, dtype=int)
+
+    # 6. NORMALIZATION CUỐI CÙNG (/255 or Z-score)
+    logger.info(f"Normalizing datasets (Norm type: {norm_type})...")
+    X_train, train_mean, train_std = normalize_dataset(X_train_aug, norm_type=norm_type)
+    X_val, _, _ = normalize_dataset(X_val_feat, norm_type=norm_type, mean=train_mean, std=train_std)
+    X_test, _, _ = normalize_dataset(X_test_feat, norm_type=norm_type, mean=train_mean, std=train_std)
 
     # Save class mapping
     CLASS_MAPPING_PATH.parent.mkdir(parents=True, exist_ok=True)

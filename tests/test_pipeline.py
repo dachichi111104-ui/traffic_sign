@@ -115,6 +115,27 @@ class TestTrafficSignPipeline(unittest.TestCase):
         self.assertIsInstance(cfg, dict)
         self.assertTrue("use_clahe" in cfg or len(cfg) >= 0)
 
+    def test_6_augmentation_before_normalization_preserves_pixel_values(self):
+        """
+        Requirement 8: Confirm augmentation on uint8 [0, 255] BEFORE normalization
+        preserves pixel values and blur does not truncate normalized float images to zero.
+        """
+        from src.preprocessing import preprocess_dataset_features, normalize_dataset
+        
+        # 1. Take raw uint8 image
+        raw_uint8 = np.random.randint(50, 200, (32, 32, 3), dtype=np.uint8)
+        
+        # 2. Run augmentation on uint8
+        aug_uint8 = augment_single_image(raw_uint8)
+        self.assertEqual(aug_uint8.dtype, np.uint8)
+        self.assertGreater(aug_uint8.mean(), 10.0, "Augmented uint8 image should maintain healthy pixel values")
+        
+        # 3. Normalize AFTER augmentation
+        norm_img, _, _ = normalize_dataset(np.expand_dims(aug_uint8, axis=0), norm_type="minmax")
+        self.assertEqual(norm_img.shape, (1, 32, 32, 3))
+        self.assertLessEqual(norm_img.max(), 1.0)
+        self.assertGreater(norm_img.mean(), 0.04, "Normalized image after augmentation should retain valid signal")
+
 
 if __name__ == "__main__":
     unittest.main()

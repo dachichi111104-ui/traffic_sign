@@ -364,6 +364,104 @@ def apply_imbalanced_sampling(
         return X, y
 
 
+def preprocess_image_pixel(
+    image_input: Union[str, Path, np.ndarray, bytes],
+    target_size: Tuple[int, int] = IMAGE_SIZE,
+    use_clahe: bool = True,
+    use_gamma: bool = False,
+    use_unsharp: bool = False,
+    gamma_val: float = 1.2
+) -> np.ndarray:
+    """
+    Applies spatial and color preprocessing on raw image in uint8 [0, 255] domain:
+    1. Read RGB (load_image)
+    2. Resize to 32x32 (resize_image)
+    3. Optional CLAHE (apply_clahe)
+    4. Optional Gamma Correction (apply_gamma_correction)
+    5. Optional Unsharp Masking (apply_unsharp_mask)
+    Returns clean uint8 RGB image of shape (32, 32, 3).
+    """
+    img = load_image(image_input)
+    img = resize_image(img, target_size=target_size)
+    if use_clahe:
+        img = apply_clahe(img)
+    if use_gamma:
+        img = apply_gamma_correction(img, gamma=gamma_val)
+    if use_unsharp:
+        img = apply_unsharp_mask(img)
+    if img.dtype != np.uint8:
+        if img.max() <= 1.0:
+            img = np.clip(img * 255.0, 0, 255).astype(np.uint8)
+        else:
+            img = np.clip(img, 0, 255).astype(np.uint8)
+    return img
+
+
+def preprocess_dataset_features(
+    images: List[np.ndarray],
+    target_size: Tuple[int, int] = IMAGE_SIZE,
+    use_clahe: bool = True,
+    use_gamma: bool = False,
+    use_unsharp: bool = False
+) -> np.ndarray:
+    """
+    Preprocesses a batch/list of images into uint8 [0, 255] domain (BEFORE augmentation & normalization).
+    Returns numpy array of shape (N, 32, 32, 3) dtype uint8.
+    """
+    processed = []
+    for img in images:
+        p_img = preprocess_image_pixel(
+            img,
+            target_size=target_size,
+            use_clahe=use_clahe,
+            use_gamma=use_gamma,
+            use_unsharp=use_unsharp
+        )
+        processed.append(p_img)
+    return np.array(processed, dtype=np.uint8)
+
+
+def normalize_dataset(
+    images_arr: np.ndarray,
+    norm_type: str = "minmax",
+    mean: Optional[Union[np.ndarray, List[float]]] = None,
+    std: Optional[Union[np.ndarray, List[float]]] = None
+) -> Tuple[np.ndarray, Optional[List[float]], Optional[List[float]]]:
+    """
+    Normalizes dataset array AFTER augmentation and sampling:
+    - If norm_type == 'minmax': scales pixel values from [0, 255] to [0.0, 1.0] float32.
+    - If norm_type == 'zscore': applies (X - mean) / (std + 1e-7).
+      If mean and std are None, calculates them from this array (Train set) and returns them as python lists.
+    Returns: (normalized_array, calc_mean_list, calc_std_list)
+    """
+    batch_arr = np.asarray(images_arr, dtype=np.float32)
+    calc_mean = None
+    calc_std = None
+
+    if norm_type == "zscore":
+        if mean is None or std is None:
+            c_mean = np.mean(batch_arr, axis=(0, 1, 2), keepdims=True)
+            c_std = np.std(batch_arr, axis=(0, 1, 2), keepdims=True)
+            calc_mean = c_mean.flatten().tolist()
+            calc_std = c_std.flatten().tolist()
+            m = c_mean
+            s = c_std
+        else:
+            m = np.array(mean, dtype=np.float32).reshape(1, 1, 1, -1) if batch_arr.ndim == 4 else np.array(mean, dtype=np.float32).reshape(1, 1, -1)
+            s = np.array(std, dtype=np.float32).reshape(1, 1, 1, -1) if batch_arr.ndim == 4 else np.array(std, dtype=np.float32).reshape(1, 1, -1)
+            calc_mean = list(mean) if isinstance(mean, (list, tuple)) else mean.flatten().tolist()
+            calc_std = list(std) if isinstance(std, (list, tuple)) else std.flatten().tolist()
+
+        batch_norm = (batch_arr - m) / (s + 1e-7)
+    else:
+        if batch_arr.max() > 1.0:
+            batch_norm = batch_arr / 255.0
+        else:
+            batch_norm = batch_arr
+
+    return batch_norm.astype(np.float32), calc_mean, calc_std
+
+
 def preprocess_single_image(
     image_input: Union[str, Path, np.ndarray, bytes],
     target_size: Tuple[int, int] = IMAGE_SIZE,
@@ -377,47 +475,24 @@ def preprocess_single_image(
 ) -> np.ndarray:
     """
     Unified sequential preprocessing pipeline for a single image:
-    1. Read / Convert RGB (load_image)
-    2. Resize to 32x32 (resize_image)
-    3. Optional CLAHE (apply_clahe)
-    4. Optional Gamma Correction (apply_gamma_correction)
-    5. Optional Unsharp Masking (apply_unsharp_mask)
-    6. Normalization (minmax /255 OR per-channel Z-score with train mean/std)
+    1. Feature preprocessing in uint8: RGB -> Resize 32x32 -> CLAHE -> Gamma -> Unsharp
+    2. Normalization: minmax /255 OR per-channel Z-score with train mean/std
     """
-    # 1. Load RGB
-    img = load_image(image_input)
-    # 2. Resize
-    img = resize_image(img, target_size=target_size)
-    # 3. CLAHE
-    if use_clahe:
-        img = apply_clahe(img)
-    # 4. Gamma Correction
-    if use_gamma:
-        img = apply_gamma_correction(img, gamma=gamma_val)
-    # 5. Unsharp Mask
-    if use_unsharp:
-        img = apply_unsharp_mask(img)
-    # 6. Normalization
-    img_float = img.astype(np.float32) if img.dtype != np.float32 else img.copy()
-    if norm_type == "zscore":
-        if mean is None or std is None:
-            m = np.mean(img_float, axis=(0, 1), keepdims=True)
-            s = np.std(img_float, axis=(0, 1), keepdims=True)
-        else:
-            m = np.array(mean, dtype=np.float32)
-            s = np.array(std, dtype=np.float32)
-            if m.ndim == 1:
-                m = m.reshape(1, 1, -1)
-            if s.ndim == 1:
-                s = s.reshape(1, 1, -1)
-        img_norm = (img_float - m) / (s + 1e-7)
-    else:
-        if img_float.max() > 1.0:
-            img_norm = img_float / 255.0
-        else:
-            img_norm = img_float
-
-    return img_norm
+    img_uint8 = preprocess_image_pixel(
+        image_input,
+        target_size=target_size,
+        use_clahe=use_clahe,
+        use_gamma=use_gamma,
+        use_unsharp=use_unsharp,
+        gamma_val=gamma_val
+    )
+    norm_batch, _, _ = normalize_dataset(
+        np.expand_dims(img_uint8, axis=0),
+        norm_type=norm_type,
+        mean=mean,
+        std=std
+    )
+    return norm_batch[0]
 
 
 def preprocess_dataset_batch(
@@ -428,53 +503,24 @@ def preprocess_dataset_batch(
     use_unsharp: bool = False,
     norm_type: str = "minmax",
     mean: Optional[Union[np.ndarray, List[float]]] = None,
-    std: Optional[Union[np.ndarray, List[float]]] = None
+    std: Optional[Union[np.ndarray, List[float]]] = None,
+    normalize: bool = True
 ) -> Tuple[np.ndarray, Optional[List[float]], Optional[List[float]]]:
     """
-    Applies the unified sequential preprocessing pipeline to a dataset batch.
-    If norm_type == 'zscore' and mean is None:
-        Calculates mean and std from this batch (Train set) and returns them as python lists.
-    Returns: (processed_images_array, train_mean_list, train_std_list)
+    Applies feature preprocessing (Resize -> CLAHE -> Gamma -> Unsharp) on batch.
+    If normalize=True: also applies normalization (/255 or Z-score).
+    If normalize=False: returns uint8 [0, 255] images (ready for augmentation).
     """
-    processed_list = []
-    for img in images:
-        p_img = load_image(img)
-        p_img = resize_image(p_img, target_size=target_size)
-        if use_clahe:
-            p_img = apply_clahe(p_img)
-        if use_gamma:
-            p_img = apply_gamma_correction(p_img)
-        if use_unsharp:
-            p_img = apply_unsharp_mask(p_img)
-        processed_list.append(p_img.astype(np.float32))
-
-    batch_arr = np.array(processed_list, dtype=np.float32)
-
-    calc_mean = None
-    calc_std = None
-
-    if norm_type == "zscore":
-        if mean is None or std is None:
-            c_mean = np.mean(batch_arr, axis=(0, 1, 2), keepdims=True)
-            c_std = np.std(batch_arr, axis=(0, 1, 2), keepdims=True)
-            calc_mean = c_mean.flatten().tolist()
-            calc_std = c_std.flatten().tolist()
-            m = c_mean
-            s = c_std
-        else:
-            m = np.array(mean, dtype=np.float32).reshape(1, 1, 1, -1)
-            s = np.array(std, dtype=np.float32).reshape(1, 1, 1, -1)
-            calc_mean = list(mean) if isinstance(mean, (list, tuple)) else mean.flatten().tolist()
-            calc_std = list(std) if isinstance(std, (list, tuple)) else std.flatten().tolist()
-        
-        batch_norm = (batch_arr - m) / (s + 1e-7)
-    else:
-        if batch_arr.max() > 1.0:
-            batch_norm = batch_arr / 255.0
-        else:
-            batch_norm = batch_arr
-
-    return batch_norm, calc_mean, calc_std
+    features_uint8 = preprocess_dataset_features(
+        images,
+        target_size=target_size,
+        use_clahe=use_clahe,
+        use_gamma=use_gamma,
+        use_unsharp=use_unsharp
+    )
+    if not normalize:
+        return features_uint8, None, None
+    return normalize_dataset(features_uint8, norm_type=norm_type, mean=mean, std=std)
 
 
 def prepare_image_pipeline(
@@ -547,7 +593,13 @@ def augment_single_image(image: np.ndarray) -> np.ndarray:
     NO horizontal flip (preserves directional traffic sign meanings).
     """
     h, w = image.shape[:2]
-    aug = image.copy()
+    is_float_unit = np.issubdtype(image.dtype, np.floating) and (image.max() <= 1.0)
+    
+    # Work in [0, 255] uint8 domain to ensure blur and transforms don't destroy pixel precision
+    if is_float_unit:
+        aug = np.clip(image * 255.0, 0, 255).astype(np.uint8)
+    else:
+        aug = np.clip(image, 0, 255).astype(np.uint8)
     
     # 1. Perspective Transform (25% chance)
     if np.random.rand() < 0.25:
@@ -564,21 +616,23 @@ def augment_single_image(image: np.ndarray) -> np.ndarray:
     M_shift = np.float32([[1, 0, tx], [0, 1, ty]])
     aug = cv2.warpAffine(aug, M_shift, (w, h), borderMode=cv2.BORDER_REFLECT_101)
 
-    # 4. Random brightness/contrast adjustment
+    # 4. Random brightness/contrast adjustment (uint8)
     brightness_factor = np.random.uniform(0.8, 1.2)
-    aug = np.clip(aug.astype(np.float32) * brightness_factor, 0, 255 if aug.max() > 1.0 else 1.0)
+    aug = np.clip(aug.astype(np.float32) * brightness_factor, 0, 255).astype(np.uint8)
 
     # 5. Motion blur or Gaussian blur (30% chance)
     if np.random.rand() < 0.3:
         if np.random.rand() < 0.5:
-            aug = cv2.GaussianBlur(aug.astype(np.uint8), (3, 3), 0)
+            aug = cv2.GaussianBlur(aug, (3, 3), 0)
         else:
-            aug = apply_motion_blur(aug.astype(np.uint8), kernel_size=3)
+            aug = apply_motion_blur(aug, kernel_size=3)
 
     # 6. Cutout / Random Erasing (20% chance)
     if np.random.rand() < 0.20:
         aug = apply_cutout(aug, n_holes=1, length=6)
     
+    if is_float_unit:
+        return (aug.astype(np.float32) / 255.0).astype(image.dtype)
     return aug.astype(image.dtype)
 
 
