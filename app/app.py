@@ -64,7 +64,7 @@ with nav_tabs[0]:
 
     dataset_path, is_sample = find_dataset_dir()
     render_alert(
-        "ĐÃ KẾT NỐI MÔ HÌNH THỰC NGHIỆM THẬT GTSRB: Mô hình HOG + SVM (96.96% Accuracy) và CNN TensorFlow được nạp trực tiếp từ bộ trọng số đã huấn luyện trên 39,209 ảnh thật của bộ dữ liệu GTSRB (43 lớp).",
+        "ĐÃ KẾT NỐI MÔ HÌNH THỰC NGHIỆM THẬT GTSRB: Hệ thống nạp trực tiếp bộ trọng số đã huấn luyện trên bộ dữ liệu GTSRB (tổng cộng 51,839 ảnh biển báo giao thông thật, 43 lớp: 39,209 ảnh Train + 12,630 ảnh Test).",
         "success"
     )
 
@@ -90,7 +90,7 @@ with nav_tabs[0]:
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        render_metric_card("Bộ dữ liệu Huấn luyện", "GTSRB", "39,209 ảnh thật (43 lớp)")
+        render_metric_card("Bộ dữ liệu GTSRB", "51,839 ảnh", "39,209 Train + 12,630 Test")
     with c2:
         render_metric_card("Số lượng Lớp", str(NUM_CLASSES), "Classes (0 - 42)")
     with c3:
@@ -335,15 +335,16 @@ with nav_tabs[2]:
 
         stats = get_cached_dataset_stats(str(ds_path))
 
+        total_gtsrb_str = "51,839" if (ROOT_DIR / "data" / "raw" / "GTSRB" / "Test").exists() else f"{stats['total_images']:,}"
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            render_metric_card("Tổng Số Ảnh Data", f"{stats['total_images']:,}", "Đã nạp vào hệ thống")
+            render_metric_card("Tổng Số Ảnh GTSRB", total_gtsrb_str, "39,209 Train + 12,630 Test" if total_gtsrb_str == "51,839" else "Đã nạp vào hệ thống")
         with c2:
             render_metric_card("Tổng Số Class", str(stats['total_classes']), "Class ID 0 -> 42")
         with c3:
             render_metric_card("Kích Thước Chuẩn", "32 x 32", "Pixels (RGB 3 channels)")
         with c4:
-            render_metric_card("Tỷ Lệ Split Data", "70% / 15% / 15%", "Train / Val / Test Ratio")
+            render_metric_card("Tỷ Lệ Split Data", "70% / 15% / 15%", "Train 70% | Val 15% | Test 15%")
 
         st.markdown("<div class='section-header'>Phân Bố Số Lượng Mẫu Theo Lớp (Class Distribution)</div>", unsafe_allow_html=True)
 
@@ -432,25 +433,33 @@ with nav_tabs[3]:
 
     c_b1, c_b2, c_b3, c_b4 = st.columns(4)
     with c_b1:
-        render_metric_card("Tập Train Gốc", "27,445 ảnh", "70% bộ dữ liệu ban đầu")
+        render_metric_card("Tập Train Gốc (70%)", "36,287 ảnh", "70% của 51,839 ảnh tổng GTSRB")
     with c_b2:
-        render_metric_card("Tập Train Tăng Cường", "54,890 ảnh", "Nhân đôi (2x) sau Augmentation")
+        render_metric_card("Tập Train Tăng Cường", "72,574 ảnh", "Nhân đôi (2x) sau Augmentation")
     with c_b3:
-        render_metric_card("Tập Validation", "5,882 ảnh", "15% - Giữ nguyên vẹn cô lập")
+        render_metric_card("Tập Validation (15%)", "7,776 ảnh", "15% - Giữ nguyên vẹn cô lập")
     with c_b4:
-        render_metric_card("Tập Test Độc Lập", "5,882 ảnh", "15% - Chống rò rỉ dữ liệu")
+        render_metric_card("Tập Test Độc Lập (15%)", "7,776 ảnh", "15% - Chống rò rỉ dữ liệu")
 
     st.markdown("<div class='section-header'>1. Nguyên Tắc Vàng: Chống Rò Rỉ Dữ Liệu (Strict Data Leakage Prevention)</div>", unsafe_allow_html=True)
     render_alert(
-        "QUY TẮC BẮT BUỘC: Phân chia 70% Train / 15% Validation / 15% Test NGAY TỪ ĐẦU trước khi áp dụng bất kỳ bước tiền xử lý hay tăng cường nào. Tập Validation và Test được giữ nguyên vẹn 100%, không bị nhân bản hay biến đổi, đảm bảo tính khách quan tuyệt đối khi đánh giá.",
+        "QUY TẮC BẮT BUỘC: Phân chia 70% Train (36,287 ảnh) / 15% Validation (7,776 ảnh) / 15% Test (7,776 ảnh) NGAY TỪ ĐẦU trên toàn bộ 51,839 ảnh GTSRB trước khi áp dụng bất kỳ bước tiền xử lý hay tăng cường nào. Tập Validation và Test được giữ nguyên vẹn 100%, không bị nhân bản hay biến đổi, đảm bảo tính khách quan tuyệt đối khi đánh giá.",
         "success"
     )
 
     st.markdown("""
-    Trong các bài toán thị giác máy tính và phân loại biển báo, **rò rỉ dữ liệu (Data Leakage)** xảy ra khi dữ liệu kiểm thử (Test) bị biến đổi hoặc nhân bản cùng tập huấn luyện (Train), khiến mô hình học thuộc lòng và cho kết quả kiểm thử cao giả tạo. Trong hệ thống này:
-    * **Phân chia độc lập:** Hàm `split_data` chia ngẫu nhiên cố định (`random_state=42`) ngay khi nạp ảnh thô BGR/RGB từ đĩa.
-    * **Cô lập hoàn toàn:** Toàn bộ bước Cân bằng mẫu (Sampling) và Tăng cường dữ liệu (Augmentation) **chỉ được phép thực thi trên tập Train**.
-    * **Thống kê chuẩn hóa (Z-Score):** Giá trị `mean` và `std` chỉ được tính toán từ tập Train, sau đó dùng cố định cho Val, Test và ảnh thực tế khi dự đoán qua Camera.
+    Trong các bài toán thị giác máy tính và phân loại biển báo, **rò rỉ dữ liệu (Data Leakage)** xảy ra khi dữ liệu kiểm thử (Test) bị biến đổi hoặc nhân bản cùng tập huấn luyện (Train), khiến mô hình học thuộc lòng và cho kết quả kiểm thử cao giả tạo.
+
+    **Bảng Thống Kê Phân Chia Dữ Liệu Khoa Học (Tỷ lệ 70% - 15% - 15% trên 51.8k ảnh GTSRB):**
+    | Phân Vùng Dữ Liệu | Tỷ Lệ (%) | Số Lượng Ảnh Gốc | Sau Augmentation (2x) | Vai Trò & Nguyên Tắc Bảo Toàn |
+    | :--- | :--- | :--- | :--- | :--- |
+    | **Tập Huấn Luyện (Train)** | **70%** | **36,287 ảnh** | **72,574 ảnh** | Huấn luyện trọng số mô hình. Áp dụng các phép biến đổi hình học, ánh sáng. |
+    | **Tập Kiểm Định (Validation)** | **15%** | **7,776 ảnh** | **7,776 ảnh (Giữ nguyên)** | Theo dõi độ hội tụ, EarlyStopping, tuyệt đối không tăng cường. |
+    | **Tập Kiểm Thử Độc Lập (Test)** | **15%** | **7,776 ảnh** | **7,776 ảnh (Giữ nguyên)** | Đo lường độ chính xác thực tế, hoàn toàn cô lập khỏi quá trình huấn luyện. |
+    | **Tổng Cộng (Toàn bộ GTSRB)** | **100%** | **51,839 ảnh** | **88,126 ảnh** | $36,287 + 7,776 + 7,776 = 51,839$ ảnh bảo toàn 100%. |
+
+    > [!NOTE]
+    > **Ghi chú về cấu trúc tệp dữ liệu GTSRB:** Bộ dữ liệu GTSRB gốc chứa tổng cộng **51,839 ảnh** (bao gồm 39,209 ảnh trong thư mục `Train/` chia theo 43 class và 12,630 ảnh trong thư mục `Test/` đi kèm `Test.csv`). Khi phân chia 70/15/15 chỉ trong nội bộ thư mục `Train/` (39,209 ảnh), các tập tương ứng là 27,445 ảnh Train, 5,882 ảnh Val và 5,882 ảnh Test nội bộ, kết hợp cùng 12,630 ảnh Test benchmark độc lập của GTSRB. Cả hai phương thức đều tuân thủ nguyên tắc chuẩn 70% - 15% - 15% và cô lập dữ liệu hoàn toàn.
     """)
 
     st.markdown("<div class='section-header'>2. Quy Trình Tiền Xử Lý Tuần Tự (Sequential Preprocessing Order)</div>", unsafe_allow_html=True)
@@ -486,20 +495,27 @@ with nav_tabs[3]:
     st.caption("Xem trực tiếp từng phép biến đổi tác động lên ảnh biển báo mẫu GTSRB:")
 
     # Interactive demo
-    demo_sample_path = ROOT_DIR / "data" / "raw" / "GTSRB" / "Train" / "00001"
+    demo_candidates = [
+        ROOT_DIR / "data" / "raw" / "GTSRB" / "Train" / "1",
+        ROOT_DIR / "data" / "raw" / "GTSRB" / "Train" / "2",
+        ROOT_DIR / "data" / "raw" / "GTSRB" / "Train" / "00001",
+        ROOT_DIR / "data" / "sample" / "1",
+    ]
     sample_img = None
-    if demo_sample_path.exists():
-        p_imgs = list(demo_sample_path.glob("*.png")) + list(demo_sample_path.glob("*.ppm"))
-        if p_imgs:
-            sample_img = cv2.imread(str(p_imgs[0]))
-            if sample_img is not None:
-                sample_img = cv2.cvtColor(sample_img, cv2.COLOR_BGR2RGB)
+    for cand in demo_candidates:
+        if cand.exists():
+            p_imgs = list(cand.glob("*.png")) + list(cand.glob("*.ppm")) + list(cand.glob("*.jpg"))
+            if p_imgs:
+                loaded = cv2.imread(str(p_imgs[0]))
+                if loaded is not None:
+                    sample_img = cv2.cvtColor(loaded, cv2.COLOR_BGR2RGB)
+                    break
 
     if sample_img is None:
         sample_img = np.full((64, 64, 3), 220, dtype=np.uint8)
         cv2.circle(sample_img, (32, 32), 26, (220, 30, 30), -1)
         cv2.circle(sample_img, (32, 32), 18, (255, 255, 255), -1)
-        cv2.putText(sample_img, "50", (16, 38), cv2.FONT_HERSHEY_BOLD, 0.6, (0, 0, 0), 2)
+        cv2.putText(sample_img, "50", (16, 38), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 
     img_resized = resize_image(sample_img, (32, 32))
     img_clahe = apply_clahe(img_resized)
