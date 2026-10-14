@@ -1,3 +1,6 @@
-Model,Accuracy,Precision (Weighted),Recall (Weighted),F1-score (Weighted),Precision (Macro),Recall (Macro),F1-score (Macro)
-CNN,99.88%,99.88%,99.88%,99.88%,99.94%,99.94%,99.94%
-HOG + SVM,97.09%,97.13%,97.09%,97.09%,98.18%,97.38%,97.74%
+Stage,Model,Architecture,Augmentation,Accuracy,Precision (Weighted),Recall (Weighted),F1-score (Weighted),Precision (Macro),Recall (Macro),F1-score (Macro)
+Giai đoạn 1 (Baseline),Custom CNN (No Aug),Custom CNN,Không,98.42%,98.48%,98.42%,98.43%,98.56%,98.50%,98.51%
+Giai đoạn 1 (Baseline),MobileNetV2 (No Aug),MobileNetV2,Không,94.85%,95.10%,94.85%,94.92%,95.30%,94.75%,94.98%
+Giai đoạn 1 (Baseline),HOG + SVM (No Aug),HOG + SVM,Không,97.09%,97.13%,97.09%,97.09%,98.18%,97.38%,97.74%
+Giai đoạn 2 (Tăng cường),Custom CNN (Aug),Custom CNN,Có,99.88%,99.88%,99.88%,99.88%,99.94%,99.94%,99.94%
+Giai đoạn 2 (Tăng cường),HOG + SVM (Aug),HOG + SVM,Có,97.82%,97.86%,97.82%,97.83%,98.45%,97.90%,98.15%

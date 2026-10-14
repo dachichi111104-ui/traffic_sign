@@ -41,12 +41,21 @@ RANDOM_STATE = 42
 
 # Model & Evaluation Output Paths
 SVM_MODEL_PATH = MODEL_DIR / "svm_hog_model.pkl"
+SVM_NO_AUG_PATH = MODEL_DIR / "svm_hog_model.pkl"
+SVM_AUG_PATH = MODEL_DIR / "svm_hog_aug_model.pkl"
+
 CNN_MODEL_PATH = MODEL_DIR / "cnn_traffic_sign.keras"
+CNN_CUSTOM_NO_AUG_PATH = MODEL_DIR / "custom_cnn_no_aug.keras"
+CNN_MOBILENET_NO_AUG_PATH = MODEL_DIR / "mobilenet_no_aug.keras"
+CNN_CUSTOM_AUG_PATH = MODEL_DIR / "custom_cnn_aug.keras"
+CNN_MOBILENET_AUG_PATH = MODEL_DIR / "mobilenet_aug.keras"
+
 CLASS_MAPPING_PATH = MODEL_DIR / "class_mapping.json"
 TRAINING_HISTORY_PATH = MODEL_DIR / "training_history.json"
 MODEL_METADATA_PATH = MODEL_DIR / "model_metadata.json"
 
 COMPARISON_CSV_PATH = RESULT_DIR / "model_comparison.csv"
+COMPARISON_METRICS_PATH = RESULT_DIR / "comparison_metrics.json"
 METRICS_JSON_PATH = RESULT_DIR / "metrics.json"
 CLASSIFICATION_REPORT_PATH = RESULT_DIR / "classification_report.json"
 CONFUSION_MATRIX_CNN_PATH = RESULT_DIR / "confusion_matrix_cnn.png"

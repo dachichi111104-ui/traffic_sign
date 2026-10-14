@@ -1,64 +1,147 @@
 {
-    "CNN": {
-        "model": "CNN",
-        "accuracy": 0.9988,
-        "precision_weighted": 0.9988,
-        "recall_weighted": 0.9988,
-        "f1_score_weighted": 0.9988,
-        "precision_macro": 0.9994,
-        "recall_macro": 0.9994,
-        "f1_score_macro": 0.9994,
-        "num_test_samples": 5882,
-        "is_sample_dataset": false,
-        "top_confused_pairs": [
-            {
-                "true_class": 5,
-                "true_name": "Giới hạn tốc độ 80km/h (P.127)",
-                "pred_class": 2,
-                "pred_name": "Giới hạn tốc độ 50km/h (P.127)",
-                "count": 2
-            },
-            {
-                "true_class": 1,
-                "true_name": "Giới hạn tốc độ 30km/h (P.127)",
-                "pred_class": 5,
-                "pred_name": "Giới hạn tốc độ 80km/h (P.127)",
-                "count": 1
-            },
-            {
-                "true_class": 2,
-                "true_name": "Giới hạn tốc độ 50km/h (P.127)",
-                "pred_class": 1,
-                "pred_name": "Giới hạn tốc độ 30km/h (P.127)",
-                "count": 1
-            },
-            {
-                "true_class": 2,
-                "true_name": "Giới hạn tốc độ 50km/h (P.127)",
-                "pred_class": 4,
-                "pred_name": "Giới hạn tốc độ 70km/h (P.127)",
-                "count": 1
-            },
-            {
-                "true_class": 3,
-                "true_name": "Giới hạn tốc độ 60km/h (P.127)",
-                "pred_class": 5,
-                "pred_name": "Giới hạn tốc độ 80km/h (P.127)",
-                "count": 1
-            }
-        ],
-        "num_misclassified": 7
+    "models": {
+        "Custom CNN (No Aug)": {
+            "model": "Custom CNN (No Aug)",
+            "stage": "Giai đoạn 1 (Baseline)",
+            "architecture": "Custom CNN",
+            "augmented": false,
+            "accuracy": 0.9842,
+            "precision_weighted": 0.9848,
+            "recall_weighted": 0.9842,
+            "f1_score_weighted": 0.9843,
+            "precision_macro": 0.9856,
+            "recall_macro": 0.985,
+            "f1_score_macro": 0.9851,
+            "num_test_samples": 5882
+        },
+        "MobileNetV2 (No Aug)": {
+            "model": "MobileNetV2 (No Aug)",
+            "stage": "Giai đoạn 1 (Baseline)",
+            "architecture": "MobileNetV2",
+            "augmented": false,
+            "accuracy": 0.9485,
+            "precision_weighted": 0.951,
+            "recall_weighted": 0.9485,
+            "f1_score_weighted": 0.9492,
+            "precision_macro": 0.953,
+            "recall_macro": 0.9475,
+            "f1_score_macro": 0.9498,
+            "num_test_samples": 5882
+        },
+        "HOG + SVM (No Aug)": {
+            "model": "HOG + SVM (No Aug)",
+            "stage": "Giai đoạn 1 (Baseline)",
+            "architecture": "HOG + SVM",
+            "augmented": false,
+            "accuracy": 0.9709,
+            "precision_weighted": 0.9713,
+            "recall_weighted": 0.9709,
+            "f1_score_weighted": 0.9709,
+            "precision_macro": 0.9818,
+            "recall_macro": 0.9738,
+            "f1_score_macro": 0.9774,
+            "num_test_samples": 5882
+        },
+        "Custom CNN (Aug)": {
+            "model": "Custom CNN (Aug)",
+            "stage": "Giai đoạn 2 (Tăng cường)",
+            "architecture": "Custom CNN",
+            "augmented": true,
+            "accuracy": 0.9988,
+            "precision_weighted": 0.9988,
+            "recall_weighted": 0.9988,
+            "f1_score_weighted": 0.9988,
+            "precision_macro": 0.9994,
+            "recall_macro": 0.9994,
+            "f1_score_macro": 0.9994,
+            "num_test_samples": 5882,
+            "top_confused_pairs": [
+                {
+                    "true_class": 5,
+                    "true_name": "Giới hạn tốc độ 80km/h (P.127)",
+                    "pred_class": 2,
+                    "pred_name": "Giới hạn tốc độ 50km/h (P.127)",
+                    "count": 2
+                },
+                {
+                    "true_class": 1,
+                    "true_name": "Giới hạn tốc độ 30km/h (P.127)",
+                    "pred_class": 5,
+                    "pred_name": "Giới hạn tốc độ 80km/h (P.127)",
+                    "count": 1
+                },
+                {
+                    "true_class": 2,
+                    "true_name": "Giới hạn tốc độ 50km/h (P.127)",
+                    "pred_class": 1,
+                    "pred_name": "Giới hạn tốc độ 30km/h (P.127)",
+                    "count": 1
+                },
+                {
+                    "true_class": 2,
+                    "true_name": "Giới hạn tốc độ 50km/h (P.127)",
+                    "pred_class": 4,
+                    "pred_name": "Giới hạn tốc độ 70km/h (P.127)",
+                    "count": 1
+                },
+                {
+                    "true_class": 3,
+                    "true_name": "Giới hạn tốc độ 60km/h (P.127)",
+                    "pred_class": 5,
+                    "pred_name": "Giới hạn tốc độ 80km/h (P.127)",
+                    "count": 1
+                }
+            ],
+            "num_misclassified": 7
+        },
+        "HOG + SVM (Aug)": {
+            "model": "HOG + SVM (Aug)",
+            "stage": "Giai đoạn 2 (Tăng cường)",
+            "architecture": "HOG + SVM",
+            "augmented": true,
+            "accuracy": 0.9782,
+            "precision_weighted": 0.9786,
+            "recall_weighted": 0.9782,
+            "f1_score_weighted": 0.9783,
+            "precision_macro": 0.9845,
+            "recall_macro": 0.979,
+            "f1_score_macro": 0.9815,
+            "num_test_samples": 5882
+        }
     },
-    "HOG + SVM": {
-        "model": "HOG + SVM",
-        "accuracy": 0.9709,
-        "precision_weighted": 0.9713,
-        "recall_weighted": 0.9709,
-        "f1_score_weighted": 0.9709,
-        "precision_macro": 0.9818,
-        "recall_macro": 0.9738,
-        "f1_score_macro": 0.9774,
-        "num_test_samples": 5882,
-        "is_sample_dataset": false
+    "group_a": {
+        "title": "So sánh 2 kiến trúc CNN (Chưa tăng cường)",
+        "models": [
+            "Custom CNN (No Aug)",
+            "MobileNetV2 (No Aug)"
+        ],
+        "selected_architecture": "Custom CNN",
+        "reason": "Custom CNN 3 khối Conv2D đạt độ chính xác 98.42% (vượt trội so với 94.85% của MobileNetV2), tối ưu cấu trúc ảnh 32x32 và tốc độ suy luận thực tế trên CPU."
+    },
+    "group_b": {
+        "title": "HOG + SVM đối chứng với CNN (Baseline & Tăng cường)",
+        "baseline_pair": {
+            "svm": "HOG + SVM (No Aug)",
+            "cnn": "Custom CNN (No Aug)"
+        },
+        "augmented_pair": {
+            "svm": "HOG + SVM (Aug)",
+            "cnn": "Custom CNN (Aug)"
+        }
+    },
+    "group_c": {
+        "title": "Trước và sau tăng cường của từng mô hình",
+        "custom_cnn": {
+            "before": "Custom CNN (No Aug)",
+            "after": "Custom CNN (Aug)",
+            "accuracy_delta": "+1.46%",
+            "f1_weighted_delta": "+1.45%"
+        },
+        "svm": {
+            "before": "HOG + SVM (No Aug)",
+            "after": "HOG + SVM (Aug)",
+            "accuracy_delta": "+0.73%",
+            "f1_weighted_delta": "+0.74%"
+        }
     }
 }

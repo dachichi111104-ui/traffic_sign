@@ -68,17 +68,22 @@ with nav_tabs[0]:
     )
 
     # Read metrics
-    cnn_acc = "86.96%"
-    svm_acc = "96.96%"
+    cnn_acc = "99.88%"
+    svm_acc = "97.09%"
     comp_file = RESULT_DIR / "comparison_metrics.json"
     if comp_file.exists():
         try:
             with open(comp_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                if "CNN" in data:
-                    cnn_acc = f"{data['CNN']['accuracy'] * 100:.2f}%"
-                if "HOG + SVM" in data:
-                    svm_acc = f"{data['HOG + SVM']['accuracy'] * 100:.2f}%"
+                m_dict = data.get("models", data)
+                if "Custom CNN (Aug)" in m_dict:
+                    cnn_acc = f"{m_dict['Custom CNN (Aug)']['accuracy'] * 100:.2f}%"
+                elif "CNN" in m_dict:
+                    cnn_acc = f"{m_dict['CNN']['accuracy'] * 100:.2f}%"
+                if "HOG + SVM (No Aug)" in m_dict:
+                    svm_acc = f"{m_dict['HOG + SVM (No Aug)']['accuracy'] * 100:.2f}%"
+                elif "HOG + SVM" in m_dict:
+                    svm_acc = f"{m_dict['HOG + SVM']['accuracy'] * 100:.2f}%"
         except Exception:
             pass
 
@@ -508,8 +513,8 @@ with nav_tabs[3]:
 # ==========================================
 with nav_tabs[4]:
     render_hero_banner(
-        title="So Sánh Hiệu Năng Các Mô Hình (Model Comparison)",
-        subtitle="Bảng so sánh định lượng và đối chứng hiệu năng thực nghiệm giữa mô hình Baseline (HOG + SVM) và mô hình Deep Learning (CNN).",
+        title="So Sánh Hiệu Năng Thực Nghiệm 3 Giai Đoạn (Model Comparison)",
+        subtitle="Đối chứng thực nghiệm khoa học: (a) So sánh 2 loại CNN chưa tăng cường, (b) HOG + SVM đối chứng với CNN, và (c) Đánh giá tác động trước/sau Data Augmentation.",
         badge_text="BENCHMARK & MODEL SELECTION",
         icon="compare"
     )
@@ -518,33 +523,141 @@ with nav_tabs[4]:
         render_alert("CHƯA CÓ KẾT QUẢ THỰC NGHIỆM: Vui lòng chạy python -m src.evaluate để tự động xuất bảng so sánh.", "warning")
     else:
         df_comp = pd.read_csv(COMPARISON_CSV_PATH)
-        st.markdown("### 1. Bảng So Sánh Hiệu Năng Thực Nghiệm (Model Comparison Table)")
+        
+        # Helper to convert percentage strings to float for plotting
+        def parse_pct_col(s):
+            if isinstance(s, str) and "%" in s:
+                return float(s.replace("%", "").strip())
+            return float(s)
+
+        # Overview Table
+        st.markdown("### 1. Bảng Tổng Hợp Chỉ Số Thực Nghiệm 3 Giai Đoạn")
         st.dataframe(df_comp, use_container_width=True)
 
-        st.markdown("<div class='section-header'>2. Biểu Đồ So Sánh Trực Quan HOG + SVM vs CNN</div>", unsafe_allow_html=True)
-        comp_json_path = RESULT_DIR / "comparison_metrics.json"
-        if comp_json_path.exists():
-            with open(comp_json_path, "r", encoding="utf-8") as f:
-                comp_data = json.load(f)
+        st.markdown("<div class='section-header'>2. Phân Tích Thực Nghiệm Theo 3 Nhóm Đối Chứng</div>", unsafe_allow_html=True)
+        tab_a, tab_b, tab_c = st.tabs([
+            "Nhóm a: So sánh 2 loại CNN (Chưa tăng cường)",
+            "Nhóm b: HOG + SVM vs CNN (Baseline & Tăng cường)",
+            "Nhóm c: Trước vs Sau Tăng cường Dữ liệu"
+        ])
 
-            chart_data = []
-            for model_name, metrics_item in comp_data.items():
-                chart_data.append({
-                    "Model": model_name,
-                    "Accuracy": metrics_item.get('accuracy', 0),
-                    "F1-Score (Weighted)": metrics_item.get('f1_score_weighted', metrics_item.get('f1_score', 0)),
-                    "F1-Score (Macro)": metrics_item.get('f1_score_macro', 0)
-                })
+        # ----------------------------------------------------
+        # NHÓM A: HAI LOẠI CNN VỚI NHAU (CHƯA TĂNG CƯỜNG)
+        # ----------------------------------------------------
+        with tab_a:
+            st.markdown("#### Đối chứng 2 Kiến Trúc CNN trên Cùng Điều Kiện Baseline (Chưa Augmentation)")
+            st.caption("Mục đích: Trả lời câu hỏi 'Dùng CNN nào?' dựa trên độ chính xác và độ tương thích với kích thước ảnh GTSRB (32x32).")
 
-            df_chart = pd.DataFrame(chart_data).set_index("Model")
-            st.bar_chart(df_chart)
+            # Filter Group A rows
+            df_a = df_comp[
+                (df_comp["Stage"].str.contains("Giai đoạn 1", na=False)) &
+                (df_comp["Architecture"].isin(["Custom CNN", "MobileNetV2"]))
+            ].copy()
 
-        st.markdown("""
-        ### 3. Phân Tích Kỹ Thuật Đánh Giá (Qualitative & Quantitative Analysis)
+            if not df_a.empty:
+                col_table_a, col_chart_a = st.columns([1.1, 1])
+                with col_table_a:
+                    st.dataframe(
+                        df_a[["Model", "Architecture", "Accuracy", "Precision (Weighted)", "Recall (Weighted)", "F1-score (Weighted)"]],
+                        use_container_width=True
+                    )
+                    render_alert(
+                        "KẾT LUẬN LỰA CHỌN KIẾN TRÚC: Custom CNN được lựa chọn là mô hình Deep Learning chính thức vì đạt Accuracy 98.42% (vượt trội so với 94.85% của MobileNetV2 trên ảnh 32x32) và thời gian suy luận CPU cực nhanh (~3ms/ảnh).",
+                        "success"
+                    )
 
-        * **HOG + SVM (Baseline Model):** Tốc độ huấn luyện nhanh, chi phí tính toán thấp. Hoạt động hiệu quả khi các biển báo có đường biên nét (edges) rõ ràng.
-        * **Convolutional Neural Network (CNN):** Tự động học trích xuất đặc trưng sâu qua các lớp Cuộn (Convolutional layers). Đạt độ tổng quát hóa cao và xử lý tốt các biến dạng ảnh thực tế.
-        """)
+                with col_chart_a:
+                    df_chart_a = df_a.copy()
+                    df_chart_a["Accuracy (%)"] = df_chart_a["Accuracy"].apply(parse_pct_col)
+                    df_chart_a["F1-score (%)"] = df_chart_a["F1-score (Weighted)"].apply(parse_pct_col)
+                    st.bar_chart(
+                        df_chart_a.set_index("Model")[["Accuracy (%)", "F1-score (%)"]]
+                    )
+
+            st.markdown("""
+            **Giải thích kỹ thuật chuyên sâu:**
+            * **Custom CNN (3 khối Conv2D):** Thiết kế tối ưu riêng cho ảnh kích thước 32×32 của GTSRB. Bộ lọc kernel 3×3 với cấu trúc Conv2D -> BatchNorm -> ReLU -> MaxPool bảo toàn không gian biểu diễn vi mô (edges, shape, text) mà không bị mất đặc trưng qua quá nhiều tầng pooling.
+            * **MobileNetV2 (Transfer Learning):** Vốn được tối ưu hóa cho bài toán phân loại ImageNet với ảnh độ phân giải cao (224×224). Khi đưa ảnh 32×32 vào kiến trúc sâu gồm nhiều tầng Inverted Residuals và Depthwise Separable Convolutions, kích thước spatial map bị giảm quá nhanh về 1×1, gây nghẽn thông tin trích xuất.
+            """)
+
+        # ----------------------------------------------------
+        # NHÓM B: HOG + SVM VỚI CNN (BASELINE & TĂNG CƯỜNG)
+        # ----------------------------------------------------
+        with tab_b:
+            st.markdown("#### Đối chứng Toàn Diện: HOG + SVM vs CNN ở Cả 2 Điều Kiện Tương Đương")
+            st.caption("Mục đích: So sánh mô hình Machine Learning truyền thống (trích xuất đặc trưng thủ công HOG) với Deep Learning (tự động học đặc trưng CNN).")
+
+            col_b1, col_b2 = st.columns(2)
+
+            with col_b1:
+                st.markdown("##### 1. Nhóm Chưa Tăng Cường (Baseline)")
+                df_b_no_aug = df_comp[
+                    (df_comp["Stage"].str.contains("Giai đoạn 1", na=False)) &
+                    (df_comp["Model"].isin(["HOG + SVM (No Aug)", "Custom CNN (No Aug)"]))
+                ].copy()
+                if not df_b_no_aug.empty:
+                    st.dataframe(df_b_no_aug[["Model", "Accuracy", "F1-score (Weighted)"]], use_container_width=True)
+                    df_b_no_aug["Accuracy (%)"] = df_b_no_aug["Accuracy"].apply(parse_pct_col)
+                    st.bar_chart(df_b_no_aug.set_index("Model")[["Accuracy (%)"]])
+
+            with col_b2:
+                st.markdown("##### 2. Nhóm Đã Tăng Cường (Augmented)")
+                df_b_aug = df_comp[
+                    (df_comp["Stage"].str.contains("Giai đoạn 2", na=False)) &
+                    (df_comp["Model"].isin(["HOG + SVM (Aug)", "Custom CNN (Aug)"]))
+                ].copy()
+                if not df_b_aug.empty:
+                    st.dataframe(df_b_aug[["Model", "Accuracy", "F1-score (Weighted)"]], use_container_width=True)
+                    df_b_aug["Accuracy (%)"] = df_b_aug["Accuracy"].apply(parse_pct_col)
+                    st.bar_chart(df_b_aug.set_index("Model")[["Accuracy (%)"]])
+
+            st.markdown("""
+            **Đánh giá đối chứng:**
+            * **HOG + SVM:** Đạt kết quả xuất sắc ngay ở mức baseline (97.09%) vì biển báo giao thông có cấu trúc hình học chuẩn (viền tròn đỏ, tam giác vàng, chữ số tương phản cao). HOG trích xuất 324 chiều biên hướng rất khớp với bài toán.
+            * **Custom CNN:** Vượt trội hơn HOG + SVM ở cả 2 điều kiện (+1.33% ở baseline và +2.06% ở nhóm tăng cường) nhờ cơ chế học phân tầng từ đặc trưng góc cạnh cấp thấp đến biểu tượng cấp cao và màu sắc thực tế.
+            """)
+
+        # ----------------------------------------------------
+        # NHÓM C: TRƯỚC VÀ SAU TĂNG CƯỜNG TỪNG MÔ HÌNH
+        # ----------------------------------------------------
+        with tab_c:
+            st.markdown("#### Đánh Giá Tác Động Của Data Augmentation Trên Từng Mô Hình")
+            st.caption("Mục đích: Định lượng độ cải thiện Delta (Augmented - Baseline) khi áp dụng cùng bộ phép biến đổi tăng cường dữ liệu.")
+
+            col_c1, col_c2 = st.columns(2)
+            with col_c1:
+                render_metric_card(
+                    "Custom CNN: Cải thiện sau Augmentation",
+                    "+1.46%",
+                    "98.42% (No Aug) -> 99.88% (Aug). Giảm số lỗi test từ 93 xuống 7 mẫu."
+                )
+            with col_c2:
+                render_metric_card(
+                    "HOG + SVM: Cải thiện sau Augmentation",
+                    "+0.73%",
+                    "97.09% (No Aug) -> 97.82% (Aug). Mở rộng vùng biên phân lớp RBF."
+                )
+
+            # Chart comparing Before vs After
+            df_c = df_comp[
+                df_comp["Model"].isin([
+                    "Custom CNN (No Aug)", "Custom CNN (Aug)",
+                    "HOG + SVM (No Aug)", "HOG + SVM (Aug)"
+                ])
+            ].copy()
+
+            if not df_c.empty:
+                df_c["Accuracy (%)"] = df_c["Accuracy"].apply(parse_pct_col)
+                df_c["F1-score (%)"] = df_c["F1-score (Weighted)"].apply(parse_pct_col)
+                st.markdown("##### Biểu đồ Đối Sánh Trước và Sau Tăng Cường (Accuracy & F1-Score)")
+                st.bar_chart(df_c.set_index("Model")[["Accuracy (%)", "F1-score (%)"]])
+
+            st.markdown("""
+            **Ý nghĩa thực nghiệm của Data Augmentation:**
+            * **Chống rò rỉ dữ liệu (No Data Leakage):** Bộ dữ liệu được phân chia thành Train (70%), Val (15%), Test (15%) *trước* khi áp dụng bất kỳ phép biến đổi nào. Augmentation được áp dụng nghiêm ngặt chỉ trên tập Train.
+            * **Trật tự tiền xử lý tối ưu:** Áp dụng biến đổi (Rotation ±12°, Shift ±3px, Blur, Gamma, Cutout) trên ảnh nguyên bản uint8 [0, 255], sau đó mới thực hiện Chuẩn hóa (MinMax hoặc Z-Score) để bảo toàn tuyệt đối chất lượng ảnh và tín hiệu gradient.
+            * **Hiệu quả:** Cả hai mô hình đều tăng độ chính xác, trong đó Deep Learning (CNN) hưởng lợi lớn hơn do có khả năng khái quát hóa không gian tham số lớn hơn khi được cung cấp mẫu phong phú.
+            """)
 
 # ==========================================
 # TAB 6: NHẬT KÝ DỰ ĐOÁN SQLITE

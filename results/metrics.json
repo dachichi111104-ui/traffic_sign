@@ -1,5 +1,8 @@
 {
-    "model": "CNN",
+    "model": "Custom CNN (Aug)",
+    "stage": "Giai đoạn 2 (Tăng cường)",
+    "architecture": "Custom CNN",
+    "augmented": true,
     "accuracy": 0.9988,
     "precision_weighted": 0.9988,
     "recall_weighted": 0.9988,
@@ -8,7 +11,6 @@
     "recall_macro": 0.9994,
     "f1_score_macro": 0.9994,
     "num_test_samples": 5882,
-    "is_sample_dataset": false,
     "top_confused_pairs": [
         {
             "true_class": 5,

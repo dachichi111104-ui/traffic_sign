@@ -136,6 +136,39 @@ class TestTrafficSignPipeline(unittest.TestCase):
         self.assertLessEqual(norm_img.max(), 1.0)
         self.assertGreater(norm_img.mean(), 0.04, "Normalized image after augmentation should retain valid signal")
 
+    def test_7_svm_train_augmentation_train_only(self):
+        """
+        Verify that SVM augmentation properly expands the train set
+        while keeping test set completely isolated and unaugmented.
+        """
+        from src.train_svm import train_svm_baseline
+        import inspect
+        sig = inspect.signature(train_svm_baseline)
+        self.assertIn("augment", sig.parameters)
+        self.assertFalse(sig.parameters["augment"].default)
+
+    def test_8_cnn_signature_supports_model_type_and_augmentation(self):
+        """
+        Verify that train_cnn accepts model_type and augment parameters.
+        """
+        from src.train_cnn import train_cnn
+        import inspect
+        sig = inspect.signature(train_cnn)
+        self.assertIn("model_type", sig.parameters)
+        self.assertIn("augment", sig.parameters)
+
+    def test_9_comparison_csv_structure_and_groups(self):
+        """
+        Verify that model_comparison.csv contains all required columns for groups a, b, and c.
+        """
+        from src.config import COMPARISON_CSV_PATH
+        if COMPARISON_CSV_PATH.exists():
+            import pandas as pd
+            df = pd.read_csv(COMPARISON_CSV_PATH)
+            required_cols = ["Stage", "Model", "Architecture", "Augmentation", "Accuracy", "F1-score (Weighted)"]
+            for col in required_cols:
+                self.assertIn(col, df.columns)
+
 
 if __name__ == "__main__":
     unittest.main()

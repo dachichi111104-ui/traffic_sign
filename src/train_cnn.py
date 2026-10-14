@@ -10,7 +10,9 @@ import tensorflow as tf
 from tensorflow.keras import layers, models, callbacks
 
 from src.config import (
-    CNN_MODEL_PATH, CLASS_MAPPING_PATH, TRAINING_HISTORY_PATH, MODEL_METADATA_PATH, RESULT_DIR,
+    CNN_MODEL_PATH, CNN_CUSTOM_NO_AUG_PATH, CNN_MOBILENET_NO_AUG_PATH,
+    CNN_CUSTOM_AUG_PATH, CNN_MOBILENET_AUG_PATH,
+    CLASS_MAPPING_PATH, TRAINING_HISTORY_PATH, MODEL_METADATA_PATH, RESULT_DIR,
     TRAINING_ACCURACY_PATH, TRAINING_LOSS_PATH,
     INPUT_SHAPE, BATCH_SIZE, EPOCHS, LEARNING_RATE, DROPOUT_RATE,
     GTSRB_CLASSES, RANDOM_STATE, TEST_RATIO, VAL_RATIO
@@ -178,11 +180,13 @@ def train_cnn(
     dataset_dir: Path = None,
     retrain: bool = False,
     model_type: str = "custom",
+    augment: bool = True,
     use_clahe: bool = True,
     use_gamma: bool = False,
     use_unsharp: bool = False,
     norm_type: str = "minmax",
-    sampling_method: str = "none"
+    sampling_method: str = "none",
+    epochs: int = None
 ):
     """
     Train CNN model with EarlyStopping, ModelCheckpoint, and ReduceLROnPlateau.
@@ -196,7 +200,18 @@ def train_cnn(
     6. Normalize datasets (/255 or Z-score) at the very end
     7. Save complete preprocessing_config & train statistics to model_metadata.json
     """
+    # Determine target model path and files based on architecture and augmentation
+    if model_type == "mobilenet":
+        target_model_path = CNN_MOBILENET_AUG_PATH if augment else CNN_MOBILENET_NO_AUG_PATH
+    else:
+        target_model_path = CNN_CUSTOM_AUG_PATH if augment else CNN_CUSTOM_NO_AUG_PATH
+
+    target_history_path = RESULT_DIR / f"history_{model_type}_{'aug' if augment else 'no_aug'}.json"
+    target_metadata_path = MODEL_DIR / f"metadata_{model_type}_{'aug' if augment else 'no_aug'}.json"
+
     requested_config = {
+        "model_type": model_type,
+        "augment": augment,
         "use_clahe": use_clahe,
         "use_gamma": use_gamma,
         "use_unsharp": use_unsharp,
@@ -206,28 +221,34 @@ def train_cnn(
     }
 
     # Requirement 7: Check if existing model configuration matches. Force retrain if config changed.
-    if CNN_MODEL_PATH.exists() and MODEL_METADATA_PATH.exists() and not retrain:
+    if target_model_path.exists() and not retrain:
         try:
-            with open(MODEL_METADATA_PATH, 'r', encoding='utf-8') as f:
-                existing_meta = json.load(f)
-            saved_config = existing_meta.get("preprocessing_config", {})
-            config_changed = any(
-                saved_config.get(k) != v for k, v in requested_config.items() if k not in ["train_mean", "train_std"]
-            )
-            if config_changed:
-                logger.warning("Requested preprocessing configuration differs from saved model metadata! Forcing retrain...")
-                retrain = True
-            else:
-                logger.info(f"CNN model already exists at {CNN_MODEL_PATH} with matching configuration. Loading model.")
-                model = models.load_model(CNN_MODEL_PATH)
-                with open(TRAINING_HISTORY_PATH, 'r', encoding='utf-8') as f:
-                    history_dict = json.load(f)
-                return model, history_dict
+            meta_file = target_metadata_path if target_metadata_path.exists() else MODEL_METADATA_PATH
+            if meta_file.exists():
+                with open(meta_file, 'r', encoding='utf-8') as f:
+                    existing_meta = json.load(f)
+                saved_config = existing_meta.get("preprocessing_config", {})
+                config_changed = any(
+                    saved_config.get(k) != v for k, v in requested_config.items() if k not in ["train_mean", "train_std"]
+                )
+                if config_changed:
+                    logger.warning("Requested configuration differs from saved model metadata! Forcing retrain...")
+                    retrain = True
+                else:
+                    logger.info(f"Model already exists at {target_model_path} with matching configuration. Loading model.")
+                    model = models.load_model(target_model_path)
+                    hist_file = target_history_path if target_history_path.exists() else TRAINING_HISTORY_PATH
+                    history_dict = {}
+                    if hist_file.exists():
+                        with open(hist_file, 'r', encoding='utf-8') as f:
+                            history_dict = json.load(f)
+                    return model, history_dict
         except Exception as e:
             logger.warning(f"Could not verify existing model metadata: {e}. Retraining...")
             retrain = True
 
-    logger.info("--- Starting CNN Model Training (Strict Sequential Pipeline: Augment on uint8 -> Normalize) ---")
+    aug_str = "WITH Augmentation" if augment else "WITHOUT Augmentation (Baseline)"
+    logger.info(f"--- Starting CNN Model Training [{model_type.upper()}] [{aug_str}] ---")
     
     # 1. Load Raw Dataset (RGB)
     images_raw, labels, stats = load_raw_dataset(dataset_dir=dataset_dir)
@@ -272,22 +293,26 @@ def train_cnn(
     class_weights_arr = compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
     class_weight_dict = dict(enumerate(class_weights_arr))
 
-    # 5. Apply Data Augmentation on uint8 [0, 255] BEFORE Normalization (prevents blur from corrupting normalized floats)
-    logger.info("Applying data augmentation on uint8 images BEFORE normalization...")
-    X_train_aug = []
-    y_train_aug = []
-    for img, lbl in zip(X_train_feat, y_train):
-        X_train_aug.append(img)
-        y_train_aug.append(lbl)
-        X_train_aug.append(augment_single_image(img))
-        y_train_aug.append(lbl)
-
-    X_train_aug = np.array(X_train_aug, dtype=np.uint8)
-    y_train = np.array(y_train_aug, dtype=int)
+    # 5. Apply Data Augmentation on uint8 [0, 255] BEFORE Normalization (Stage 2)
+    if augment:
+        logger.info("Applying data augmentation on uint8 images BEFORE normalization...")
+        X_train_aug = []
+        y_train_aug = []
+        for img, lbl in zip(X_train_feat, y_train):
+            X_train_aug.append(img)
+            y_train_aug.append(lbl)
+            X_train_aug.append(augment_single_image(img))
+            y_train_aug.append(lbl)
+        X_train_final = np.array(X_train_aug, dtype=np.uint8)
+        y_train_final = np.array(y_train_aug, dtype=int)
+    else:
+        logger.info("Stage 1 Baseline: No data augmentation applied.")
+        X_train_final = X_train_feat
+        y_train_final = y_train
 
     # 6. NORMALIZATION CUỐI CÙNG (/255 or Z-score)
     logger.info(f"Normalizing datasets (Norm type: {norm_type})...")
-    X_train, train_mean, train_std = normalize_dataset(X_train_aug, norm_type=norm_type)
+    X_train, train_mean, train_std = normalize_dataset(X_train_final, norm_type=norm_type)
     X_val, _, _ = normalize_dataset(X_val_feat, norm_type=norm_type, mean=train_mean, std=train_std)
     X_test, _, _ = normalize_dataset(X_test_feat, norm_type=norm_type, mean=train_mean, std=train_std)
 
@@ -305,9 +330,9 @@ def train_cnn(
         model = build_cnn_model(input_shape=INPUT_SHAPE, num_classes=num_classes)
 
     # 8. Callbacks
-    CNN_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    target_model_path.parent.mkdir(parents=True, exist_ok=True)
     checkpoint_cb = callbacks.ModelCheckpoint(
-        str(CNN_MODEL_PATH), save_best_only=True, monitor='val_loss', mode='min'
+        str(target_model_path), save_best_only=True, monitor='val_loss', mode='min'
     )
     early_stopping_cb = callbacks.EarlyStopping(
         monitor='val_loss', patience=8, restore_best_weights=True
@@ -317,10 +342,11 @@ def train_cnn(
     )
 
     # 9. Fit Model
+    train_epochs = epochs if epochs is not None else EPOCHS
     history = model.fit(
-        X_train, y_train,
+        X_train, y_train_final,
         validation_data=(X_val, y_val),
-        epochs=EPOCHS,
+        epochs=train_epochs,
         batch_size=BATCH_SIZE,
         class_weight=class_weight_dict,
         callbacks=[checkpoint_cb, early_stopping_cb, reduce_lr_cb],
@@ -334,11 +360,17 @@ def train_cnn(
         'val_loss': [float(x) for x in history.history['val_loss']]
     }
 
+    # Save history
+    RESULT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(target_history_path, 'w', encoding='utf-8') as f:
+        json.dump(history_dict, f, indent=4)
     with open(TRAINING_HISTORY_PATH, 'w', encoding='utf-8') as f:
         json.dump(history_dict, f, indent=4)
 
     # 10. Save Complete Metadata with Preprocessing Config & Statistics
     preprocessing_config = {
+        "model_type": model_type,
+        "augment": augment,
         "use_clahe": use_clahe,
         "use_gamma": use_gamma,
         "use_unsharp": use_unsharp,
@@ -353,6 +385,8 @@ def train_cnn(
         "dataset_path": stats.get("dataset_path"),
         "is_sample_dataset": stats.get("is_sample", False),
         "num_classes": num_classes,
+        "model_type": model_type,
+        "augmented": augment,
         "trained_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "epochs_run": len(history_dict['accuracy']),
         "final_train_acc": round(history_dict['accuracy'][-1], 4),
@@ -360,20 +394,31 @@ def train_cnn(
         "preprocessing_config": preprocessing_config
     }
 
+    with open(target_metadata_path, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, indent=4, ensure_ascii=False)
     with open(MODEL_METADATA_PATH, 'w', encoding='utf-8') as f:
         json.dump(metadata, f, indent=4, ensure_ascii=False)
+
+    # If this is Custom CNN with Augmentation, also ensure default CNN_MODEL_PATH is updated
+    if model_type == "custom" and augment:
+        import shutil
+        if target_model_path.exists() and target_model_path != CNN_MODEL_PATH:
+            shutil.copyfile(target_model_path, CNN_MODEL_PATH)
 
     # Plot & Save curves
     plot_and_save_training_curves(history_dict)
 
-    logger.info("CNN training completed successfully!")
+    logger.info(f"CNN [{model_type}] training ({'aug' if augment else 'no_aug'}) completed successfully!")
     return model, history_dict
 
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument("--model-type", type=str, default="custom", choices=["custom", "mobilenet"], help="CNN architecture: custom or mobilenet")
     parser.add_argument("--retrain", action="store_true", help="Force retrain CNN model")
+    parser.add_argument("--no-augment", action="store_true", help="Disable data augmentation (Stage 1 Baseline mode)")
+    parser.add_argument("--epochs", type=int, default=None, help="Number of training epochs")
     parser.add_argument("--no-clahe", action="store_true", help="Disable CLAHE")
     parser.add_argument("--use-gamma", action="store_true", help="Apply Gamma Correction")
     parser.add_argument("--use-unsharp", action="store_true", help="Apply Unsharp Masking")
@@ -382,7 +427,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     train_cnn(
+        model_type=args.model_type,
+        augment=not args.no_augment,
         retrain=args.retrain,
+        epochs=args.epochs,
         use_clahe=not args.no_clahe,
         use_gamma=args.use_gamma,
         use_unsharp=args.use_unsharp,
