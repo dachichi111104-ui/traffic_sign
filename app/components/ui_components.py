@@ -12,10 +12,12 @@ def apply_custom_theme():
     """
     st.markdown("""
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
             
-            html, body, [class*="css"] {
-                font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            *, html, body, [class*="css"], .stApp, p, span, div, h1, h2, h3, h4, h5, h6, button, input, select, textarea, label {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
             }
 
             /* Hide Sidebar Completely for Top-Header Web App Layout */
@@ -175,10 +177,16 @@ def apply_custom_theme():
             /* Streamlit Tabs Container & 100% Full Pill Navigation Styling */
             html body .stApp .stTabs [data-baseweb="tab-list"],
             html body .stApp div[data-testid="stTabs"] [data-baseweb="tab-list"] {
-                gap: 8px !important;
+                gap: 6px !important;
                 background-color: transparent !important;
-                padding-bottom: 6px !important;
+                padding-bottom: 8px !important;
                 border-bottom: none !important;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                overflow-y: visible !important;
+                scrollbar-width: thin !important;
+                -webkit-overflow-scrolling: touch !important;
             }
 
             html body .stApp .stTabs [data-baseweb="tab"],
@@ -196,17 +204,34 @@ def apply_custom_theme():
                 border-top-right-radius: 9999px !important;
                 border-bottom-left-radius: 9999px !important;
                 border-bottom-right-radius: 9999px !important;
-                padding: 8px 22px !important;
-                font-size: 0.88rem !important;
+                padding: 7px 16px !important;
+                font-size: 0.84rem !important;
                 font-weight: 600 !important;
                 color: #334155 !important;
                 transition: all 0.2s ease !important;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
                 margin-bottom: 2px !important;
                 outline: none !important;
-                overflow: hidden !important;
+                overflow: visible !important;
+                white-space: nowrap !important;
+                flex-shrink: 0 !important;
+                max-width: none !important;
                 -webkit-border-radius: 9999px !important;
                 -moz-border-radius: 9999px !important;
+            }
+
+            /* Eradicate text clipping and ellipsis inside tabs */
+            html body .stApp .stTabs [data-baseweb="tab"] p,
+            html body .stApp .stTabs [data-baseweb="tab"] span,
+            html body .stApp .stTabs [data-baseweb="tab"] div,
+            html body .stApp div[data-testid="stTabs"] button p,
+            html body .stApp div[data-testid="stTabs"] button span,
+            html body .stApp div[data-testid="stTabs"] button div {
+                overflow: visible !important;
+                text-overflow: clip !important;
+                white-space: nowrap !important;
+                max-width: none !important;
+                font-size: 0.84rem !important;
             }
 
             html body .stApp .stTabs [data-baseweb="tab"]:hover,
