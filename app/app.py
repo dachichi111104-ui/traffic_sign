@@ -299,11 +299,31 @@ with nav_tabs[2]:
         else:
             render_alert(f"ĐẦU VÀO DỮ LIỆU THẬT GTSRB: {ds_path}", "success")
 
-        images, labels, stats = load_raw_dataset(dataset_dir=ds_path, max_samples_per_class=50)
+        @st.cache_data
+        def get_cached_dataset_stats(dataset_path_str: str):
+            p = Path(dataset_path_str)
+            class_counts = {}
+            class_dirs = sorted(
+                [d for d in p.iterdir() if d.is_dir() and (d.name.isdigit() or d.name.lstrip('0').isdigit() or d.name == '00000')],
+                key=lambda x: int(x.name)
+            )
+            for c_dir in class_dirs:
+                class_id = int(c_dir.name)
+                cnt = len(list(c_dir.glob("*.png")) + list(c_dir.glob("*.jpg")) + list(c_dir.glob("*.ppm")))
+                class_counts[class_id] = cnt
+            return {
+                "total_images": sum(class_counts.values()),
+                "total_classes": len(class_counts),
+                "class_counts": class_counts,
+                "dataset_path": str(p),
+                "is_sample": ("sample" in str(p).lower())
+            }
+
+        stats = get_cached_dataset_stats(str(ds_path))
 
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            render_metric_card("Tổng Số Ảnh Data", str(stats['total_images']), "Đã nạp vào hệ thống")
+            render_metric_card("Tổng Số Ảnh Data", f"{stats['total_images']:,}", "Đã nạp vào hệ thống")
         with c2:
             render_metric_card("Tổng Số Class", str(stats['total_classes']), "Class ID 0 -> 42")
         with c3:
