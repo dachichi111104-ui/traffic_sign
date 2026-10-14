@@ -20,7 +20,7 @@ from src.config import (
     GTSRB_CLASSES
 )
 from src.data_loader import load_raw_dataset, find_dataset_dir
-from src.preprocessing import detect_and_crop_traffic_sign
+from src.preprocessing import detect_and_crop_traffic_sign, augment_single_image, apply_clahe, resize_image
 from src.predict import predict_traffic_sign
 from src.history_db import get_prediction_history, add_prediction_to_history, clear_prediction_history
 from app.components.ui_components import (
@@ -45,9 +45,10 @@ nav_tabs = st.tabs([
     "1. Tổng quan & Dashboard",
     "2. Nhận diện & Camera",
     "3. Khám phá Dữ liệu",
-    "4. Đánh giá Mô hình",
-    "5. So sánh Thực nghiệm",
-    "6. Nhật ký Dự đoán"
+    "4. Baseline & Tăng Cường Dữ Liệu",
+    "5. Đánh giá Mô hình",
+    "6. So sánh Thực nghiệm",
+    "7. Nhật ký Dự đoán"
 ])
 
 # ==========================================
@@ -134,11 +135,19 @@ with nav_tabs[1]:
 
     selected_model = st.radio(
         "Mô hình dự đoán:",
-        ["CNN", "HOG + SVM"],
+        ["Custom CNN", "MobileNetV2", "HOG + SVM"],
         index=0,
         horizontal=True,
-        key="radio_model_main"
+        key="radio_model_main",
+        help="Custom CNN (Accuracy 99.88% - Tối ưu cho ảnh 32x32), MobileNetV2 (Accuracy 94.85% - Transfer Learning), HOG + SVM (Accuracy 97.09% - Baseline)"
     )
+
+    if selected_model == "Custom CNN":
+        render_alert("Đang dùng Custom CNN (3 khối Conv2D): Độ chính xác 99.88% trên Test Set, tối ưu hóa ảnh 32x32, suy luận cực nhanh ~3ms/ảnh.", "success")
+    elif selected_model == "MobileNetV2":
+        render_alert("Đang dùng MobileNetV2 (Transfer Learning ImageNet): Độ chính xác 94.85% trên Test Set, kiến trúc mạng sâu tiền huấn luyện.", "info")
+    else:
+        render_alert("Đang dùng HOG + SVM (Machine Learning Baseline): Độ chính xác 97.09% trên Test Set, trích xuất 324 chiều đặc trưng biên hướng HOG.", "info")
 
     tab_cam, tab_up, tab_ext = st.tabs([
         "1. Chụp Hình Trực Tiếp (Camera / Webcam)",
@@ -411,9 +420,133 @@ with nav_tabs[2]:
         render_alert(f"Lỗi khi tải dữ liệu dataset: {str(e)}", "warning")
 
 # ==========================================
-# TAB 4: ĐÁNH GIÁ MÔ HÌNH
+# TAB 4: BASELINE & TĂNG CƯỜNG DỮ LIỆU
 # ==========================================
 with nav_tabs[3]:
+    render_hero_banner(
+        title="Quy Trình Baseline & Kỹ Thuật Tăng Cường Dữ Liệu (Data Augmentation)",
+        subtitle="Mô tả toàn diện quy trình chuẩn bị dữ liệu: từ ảnh thô GTSRB ban đầu đến bộ dữ liệu hoàn chỉnh, phương pháp chống rò rỉ dữ liệu (No Data Leakage) và trực quan hóa các phép biến đổi tăng cường.",
+        badge_text="DATA PIPELINE & AUGMENTATION",
+        icon="filter"
+    )
+
+    c_b1, c_b2, c_b3, c_b4 = st.columns(4)
+    with c_b1:
+        render_metric_card("Tập Train Gốc", "27,445 ảnh", "70% bộ dữ liệu ban đầu")
+    with c_b2:
+        render_metric_card("Tập Train Tăng Cường", "54,890 ảnh", "Nhân đôi (2x) sau Augmentation")
+    with c_b3:
+        render_metric_card("Tập Validation", "5,882 ảnh", "15% - Giữ nguyên vẹn cô lập")
+    with c_b4:
+        render_metric_card("Tập Test Độc Lập", "5,882 ảnh", "15% - Chống rò rỉ dữ liệu")
+
+    st.markdown("<div class='section-header'>1. Nguyên Tắc Vàng: Chống Rò Rỉ Dữ Liệu (Strict Data Leakage Prevention)</div>", unsafe_allow_html=True)
+    render_alert(
+        "QUY TẮC BẮT BUỘC: Phân chia 70% Train / 15% Validation / 15% Test NGAY TỪ ĐẦU trước khi áp dụng bất kỳ bước tiền xử lý hay tăng cường nào. Tập Validation và Test được giữ nguyên vẹn 100%, không bị nhân bản hay biến đổi, đảm bảo tính khách quan tuyệt đối khi đánh giá.",
+        "success"
+    )
+
+    st.markdown("""
+    Trong các bài toán thị giác máy tính và phân loại biển báo, **rò rỉ dữ liệu (Data Leakage)** xảy ra khi dữ liệu kiểm thử (Test) bị biến đổi hoặc nhân bản cùng tập huấn luyện (Train), khiến mô hình học thuộc lòng và cho kết quả kiểm thử cao giả tạo. Trong hệ thống này:
+    * **Phân chia độc lập:** Hàm `split_data` chia ngẫu nhiên cố định (`random_state=42`) ngay khi nạp ảnh thô BGR/RGB từ đĩa.
+    * **Cô lập hoàn toàn:** Toàn bộ bước Cân bằng mẫu (Sampling) và Tăng cường dữ liệu (Augmentation) **chỉ được phép thực thi trên tập Train**.
+    * **Thống kê chuẩn hóa (Z-Score):** Giá trị `mean` và `std` chỉ được tính toán từ tập Train, sau đó dùng cố định cho Val, Test và ảnh thực tế khi dự đoán qua Camera.
+    """)
+
+    st.markdown("<div class='section-header'>2. Quy Trình Tiền Xử Lý Tuần Tự (Sequential Preprocessing Order)</div>", unsafe_allow_html=True)
+    st.markdown("""
+    Toàn bộ dữ liệu đi qua một đường ống tiền xử lý cố định theo đúng thứ tự logic khoa học:
+    1. **Đọc ảnh & Chuyển đổi không gian màu RGB:** Đọc ảnh và đảm bảo kênh màu đồng nhất (loại bỏ khác biệt BGR của OpenCV).
+    2. **Resize chuẩn 32×32:** Sử dụng thuật toán nội suy `cv2.INTER_AREA` (chuyên dụng để co nhỏ ảnh mà không tạo nhiễu răng cưa) để đưa mọi kích thước ảnh về chuẩn $32 \\times 32 \\times 3$.
+    3. **Cân bằng Histogram Cục bộ (CLAHE):** Chuyển ảnh sang không gian màu **LAB**, áp dụng thuật toán `cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))` trên kênh sáng **L**. Kỹ thuật này giúp làm rõ nét chữ số, mũi tên và viền biển báo trong điều kiện ngược sáng hoặc thiếu sáng mà không gây sai lệch màu sắc nhận diện.
+    4. **Tùy chọn Gamma Correction:** Điều chỉnh độ cong phi tuyến của cường độ sáng ($\\gamma = 0.8 - 1.2$) khi cần làm sáng các vùng biển báo bị tối.
+    5. **Tùy chọn Unsharp Masking:** Làm sắc nét các cạnh viền bằng cách trừ ảnh mờ Gaussian khỏi ảnh gốc.
+    6. **Chuẩn hóa Pixel (Min-Max [0, 1] hoặc Z-Score):** Được đặt ở bước **CUỐI CÙNG** sau khi hoàn tất Augmentation.
+    """)
+
+    st.markdown("<div class='section-header'>3. Kỹ Thuật Tăng Cường Dữ Liệu Trên Ảnh Số Nguyên (uint8 [0, 255])</div>", unsafe_allow_html=True)
+    render_alert(
+        "LƯU Ý KỸ THUẬT QUAN TRỌNG: Toàn bộ các phép biến đổi hình học và làm mờ được thực hiện trên ảnh số nguyên uint8 [0, 255]. Nếu chuẩn hóa ảnh về float [0.0, 1.0] trước, các bộ lọc như Motion Blur hay Gaussian Blur sẽ làm tròn các giá trị float nhỏ về 0.0, gây mất mát thông tin. Do đó, quy trình chuẩn là: Tăng cường trên uint8 -> Chuẩn hóa float.",
+        "info"
+    )
+
+    st.markdown("""
+    | Phép Biến Đổi | Tham Số Kỹ Thuật | Mô Phỏng Ngoại Cảnh Thực Tế |
+    | :--- | :--- | :--- |
+    | **Rotation (Xoay ảnh)** | Góc ngẫu nhiên $\\pm 12^\\circ$ | Góc nghiêng của xe khi vào cua, góc gắn camera hoặc biển báo bị lệch. |
+    | **Translation (Tịnh tiến)** | Dịch chuyển $\\pm 3\\text{px}$ trên trục x, y | Vị trí biển báo lệch tâm trong khung hình camera hành trình. |
+    | **Perspective Transform** | Biến dạng ma trận phối cảnh $3 \\times 3$ | Góc nhìn nghiêng từ làn đường khác hoặc từ camera gắn trên kính chắn gió. |
+    | **Motion Blur** | Kernel mờ chuyển động kích thước $3 \\times 3$ | Hiện tượng nhòe nét khi xe di chuyển với tốc độ cao qua biển báo. |
+    | **Gaussian Blur** | Kernel lọc Gaussian $3 \\times 3$, $\\sigma = 0$ | Điều kiện thời tiết bất lợi (mưa phùn, sương mù, ống kính camera bị mờ). |
+    | **Random Gamma** | Giá trị Gamma biến thiên $0.6 - 1.5$ | Cường độ ánh sáng thay đổi giữa trời nắng gắt, hoàng hôn và bóng râm dưới tán cây. |
+    | **Cutout (Che khuất)** | Vùng che ngẫu nhiên kích thước $6 \\times 6$ đến $10 \\times 10$ | Biển báo bị che một phần bởi cành cây, cột đèn, bụi bẩn hoặc bóng đổ. |
+    """)
+
+    st.markdown("<div class='section-header'>4. Trực Quan Hóa Tương Tác Các Phép Tăng Cường (Interactive Playground)</div>", unsafe_allow_html=True)
+    st.caption("Xem trực tiếp từng phép biến đổi tác động lên ảnh biển báo mẫu GTSRB:")
+
+    # Interactive demo
+    demo_sample_path = ROOT_DIR / "data" / "raw" / "GTSRB" / "Train" / "00001"
+    sample_img = None
+    if demo_sample_path.exists():
+        p_imgs = list(demo_sample_path.glob("*.png")) + list(demo_sample_path.glob("*.ppm"))
+        if p_imgs:
+            sample_img = cv2.imread(str(p_imgs[0]))
+            if sample_img is not None:
+                sample_img = cv2.cvtColor(sample_img, cv2.COLOR_BGR2RGB)
+
+    if sample_img is None:
+        sample_img = np.full((64, 64, 3), 220, dtype=np.uint8)
+        cv2.circle(sample_img, (32, 32), 26, (220, 30, 30), -1)
+        cv2.circle(sample_img, (32, 32), 18, (255, 255, 255), -1)
+        cv2.putText(sample_img, "50", (16, 38), cv2.FONT_HERSHEY_BOLD, 0.6, (0, 0, 0), 2)
+
+    img_resized = resize_image(sample_img, (32, 32))
+    img_clahe = apply_clahe(img_resized)
+
+    h_d, w_d = img_resized.shape[:2]
+    M_rot = cv2.getRotationMatrix2D((w_d / 2, h_d / 2), 12, 1.0)
+    img_rot = cv2.warpAffine(img_resized, M_rot, (w_d, h_d), borderMode=cv2.BORDER_REFLECT)
+
+    M_trans = np.float32([[1, 0, 3], [0, 1, -3]])
+    img_shift = cv2.warpAffine(img_resized, M_trans, (w_d, h_d), borderMode=cv2.BORDER_REFLECT)
+
+    img_blur = cv2.GaussianBlur(img_resized, (3, 3), 0)
+
+    img_cutout = img_resized.copy()
+    img_cutout[10:20, 10:20] = 0
+
+    img_full_aug = augment_single_image(img_resized)
+
+    col_demo1, col_demo2, col_demo3, col_demo4, col_demo5, col_demo6 = st.columns(6)
+    with col_demo1:
+        st.image(img_resized, caption="1. Ảnh gốc 32x32", use_container_width=True)
+    with col_demo2:
+        st.image(img_clahe, caption="2. Sau CLAHE", use_container_width=True)
+    with col_demo3:
+        st.image(img_rot, caption="3. Xoay góc (12°)", use_container_width=True)
+    with col_demo4:
+        st.image(img_shift, caption="4. Dịch chuyển (3px)", use_container_width=True)
+    with col_demo5:
+        st.image(img_blur, caption="5. Làm mờ (Blur)", use_container_width=True)
+    with col_demo6:
+        st.image(img_cutout, caption="6. Che khuất (Cutout)", use_container_width=True)
+
+    st.markdown("##### Ảnh Đầu Ra Tăng Cường Tổng Hợp (Được Đưa Vào Huấn Luyện):")
+    col_out1, col_out2 = st.columns([1, 4])
+    with col_out1:
+        st.image(img_full_aug, caption="Ảnh tăng cường hoàn chỉnh", width=128)
+    with col_out2:
+        st.markdown("""
+        * **Kích thước đầu ra:** $32 \\times 32 \\times 3$ pixel nguyên vẹn.
+        * **Đặc tính đạt được:** Mô phỏng đồng thời góc xoay, rung lắc, mờ sương và che khuất thực tế.
+        * **Kết quả thực nghiệm:** Giúp Custom CNN đạt độ chính xác **99.88%** trên Test Set, giảm số lỗi nhận diện từ 93 mẫu xuống chỉ còn 7 mẫu.
+        """)
+
+# ==========================================
+# TAB 5: ĐÁNH GIÁ MÔ HÌNH
+# ==========================================
+with nav_tabs[4]:
     render_hero_banner(
         title="Đánh Giá Chi Tiết Mô Hình (Model Evaluation)",
         subtitle="Trực quan hóa kết quả thực nghiệm trên tập kiểm thử Test Set độc lập (Accuracy, F1-score, Confusion Matrix, Training Curves & Misclassified Images).",
@@ -509,9 +642,9 @@ with nav_tabs[3]:
                                 st.write(f"**Conf:** {mis['confidence']:.2f}%")
 
 # ==========================================
-# TAB 5: SO SÁNH MÔ HÌNH
+# TAB 6: SO SÁNH THỰC NGHIỆM
 # ==========================================
-with nav_tabs[4]:
+with nav_tabs[5]:
     render_hero_banner(
         title="So Sánh Hiệu Năng Thực Nghiệm 3 Giai Đoạn (Model Comparison)",
         subtitle="Đối chứng thực nghiệm khoa học: (a) So sánh 2 loại CNN chưa tăng cường, (b) HOG + SVM đối chứng với CNN, và (c) Đánh giá tác động trước/sau Data Augmentation.",
@@ -660,9 +793,9 @@ with nav_tabs[4]:
             """)
 
 # ==========================================
-# TAB 6: NHẬT KÝ DỰ ĐOÁN SQLITE
+# TAB 7: NHẬT KÝ DỰ ĐOÁN SQLITE
 # ==========================================
-with nav_tabs[5]:
+with nav_tabs[6]:
     render_hero_banner(
         title="Nhật Ký & Lịch Sử Dự Đoán (SQLite Database)",
         subtitle="Quản lý và tra cứu toàn bộ lịch sử dự đoán được lưu trữ tự động trong cơ sở dữ liệu SQLite.",

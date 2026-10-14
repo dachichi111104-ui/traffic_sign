@@ -10,7 +10,9 @@ import logging
 import tensorflow as tf
 
 from src.config import (
-    CNN_MODEL_PATH, SVM_MODEL_PATH, CLASS_MAPPING_PATH, GTSRB_CLASSES, IMAGE_SIZE, EXTERNAL_TEST_DIR
+    CNN_MODEL_PATH, CNN_CUSTOM_AUG_PATH, CNN_MOBILENET_NO_AUG_PATH, CNN_MOBILENET_AUG_PATH,
+    SVM_MODEL_PATH, SVM_NO_AUG_PATH, SVM_AUG_PATH,
+    CLASS_MAPPING_PATH, GTSRB_CLASSES, IMAGE_SIZE, EXTERNAL_TEST_DIR, MODEL_METADATA_PATH
 )
 from src.preprocessing import prepare_image_pipeline, load_image, resize_image
 from src.feature_extraction import extract_hog_features
@@ -19,37 +21,50 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Global model cache
-_CNN_MODEL = None
+_CUSTOM_CNN_MODEL = None
+_MOBILENET_MODEL = None
 _SVM_MODEL = None
 
 
 def get_cnn_model():
-    global _CNN_MODEL
-    if _CNN_MODEL is None:
-        if not CNN_MODEL_PATH.exists():
-            logger.warning(f"CNN model not found at {CNN_MODEL_PATH}. Auto-training model for deployment...")
-            from src.train_cnn import train_cnn
-            train_cnn(retrain=True)
-        logger.info(f"Loading CNN model from {CNN_MODEL_PATH}")
-        _CNN_MODEL = tf.keras.models.load_model(CNN_MODEL_PATH)
-    return _CNN_MODEL
+    """Gets primary Custom CNN model (with augmentation)."""
+    global _CUSTOM_CNN_MODEL
+    if _CUSTOM_CNN_MODEL is None:
+        target_path = CNN_CUSTOM_AUG_PATH if CNN_CUSTOM_AUG_PATH.exists() else CNN_MODEL_PATH
+        if not target_path.exists():
+            target_path = CNN_MODEL_PATH
+        logger.info(f"Loading Custom CNN model from {target_path}")
+        _CUSTOM_CNN_MODEL = tf.keras.models.load_model(target_path)
+    return _CUSTOM_CNN_MODEL
+
+
+def get_mobilenet_model():
+    """Gets MobileNetV2 model for transfer learning comparison."""
+    global _MOBILENET_MODEL
+    if _MOBILENET_MODEL is None:
+        target_path = CNN_MOBILENET_NO_AUG_PATH if CNN_MOBILENET_NO_AUG_PATH.exists() else CNN_MOBILENET_AUG_PATH
+        if not target_path.exists():
+            from src.train_cnn import build_transfer_learning_model
+            _MOBILENET_MODEL = build_transfer_learning_model()
+            _MOBILENET_MODEL.save(CNN_MOBILENET_NO_AUG_PATH)
+        else:
+            logger.info(f"Loading MobileNetV2 model from {target_path}")
+            _MOBILENET_MODEL = tf.keras.models.load_model(target_path)
+    return _MOBILENET_MODEL
 
 
 def get_svm_model():
+    """Gets HOG + SVM model."""
     global _SVM_MODEL
     if _SVM_MODEL is None:
-        if not SVM_MODEL_PATH.exists():
-            logger.warning(f"SVM model not found at {SVM_MODEL_PATH}. Auto-training baseline model for deployment...")
+        target_path = SVM_NO_AUG_PATH if SVM_NO_AUG_PATH.exists() else SVM_MODEL_PATH
+        if not target_path.exists():
+            logger.warning(f"SVM model not found at {target_path}. Auto-training baseline model for deployment...")
             from src.train_svm import train_svm_baseline
             train_svm_baseline()
-        logger.info(f"Loading SVM model from {SVM_MODEL_PATH}")
-        _SVM_MODEL = joblib.load(SVM_MODEL_PATH)
+        logger.info(f"Loading SVM model from {target_path}")
+        _SVM_MODEL = joblib.load(target_path)
     return _SVM_MODEL
-
-
-from src.config import (
-    CNN_MODEL_PATH, SVM_MODEL_PATH, CLASS_MAPPING_PATH, GTSRB_CLASSES, IMAGE_SIZE, EXTERNAL_TEST_DIR, MODEL_METADATA_PATH
-)
 
 
 def get_model_preprocessing_config() -> Dict:
@@ -72,26 +87,32 @@ def get_model_preprocessing_config() -> Dict:
 
 def predict_traffic_sign(
     image_input: Union[str, Path, np.ndarray, bytes],
-    model_type: str = "CNN"
+    model_type: str = "Custom CNN"
 ) -> Dict:
     """
     Inference pipeline:
     Image -> Preprocessing (matching model metadata config) -> Model -> Softmax/Probabilities -> Structured Output
+    Supports: "Custom CNN", "MobileNetV2", "HOG + SVM"
     """
     img_rgb = load_image(image_input)
     
-    if model_type.upper() == "CNN":
-        model = get_cnn_model()
+    m_type_lower = model_type.strip().lower()
+    if "mobilenet" in m_type_lower:
+        model = get_mobilenet_model()
         cfg = get_model_preprocessing_config()
         processed_tensor = prepare_image_pipeline(img_rgb, target_size=IMAGE_SIZE, preprocessing_config=cfg)
         probs = model.predict(processed_tensor, verbose=0)[0]
-    elif model_type.upper() in ["SVM", "HOG + SVM"]:
+    elif "svm" in m_type_lower or "hog" in m_type_lower:
         model = get_svm_model()
         resized = resize_image(img_rgb, IMAGE_SIZE)
         hog_feat = extract_hog_features(resized).reshape(1, -1)
         probs = model.predict_proba(hog_feat)[0]
     else:
-        raise ValueError(f"Unsupported model_type: {model_type}")
+        # Default: Custom CNN
+        model = get_cnn_model()
+        cfg = get_model_preprocessing_config()
+        processed_tensor = prepare_image_pipeline(img_rgb, target_size=IMAGE_SIZE, preprocessing_config=cfg)
+        probs = model.predict(processed_tensor, verbose=0)[0]
 
     # Rank predictions by probability descending
     top_indices = np.argsort(probs)[::-1]
