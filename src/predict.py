@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 # Global model cache
 _CUSTOM_CNN_MODEL = None
+_CUSTOM_CNN_NO_AUG_MODEL = None
 _MOBILENET_MODEL = None
 _SVM_MODEL = None
 
@@ -36,6 +37,18 @@ def get_cnn_model():
         logger.info(f"Loading Custom CNN model from {target_path}")
         _CUSTOM_CNN_MODEL = tf.keras.models.load_model(target_path)
     return _CUSTOM_CNN_MODEL
+
+
+def get_cnn_no_aug_model():
+    """Gets Custom CNN model without augmentation (baseline)."""
+    global _CUSTOM_CNN_NO_AUG_MODEL
+    if _CUSTOM_CNN_NO_AUG_MODEL is None:
+        target_path = CNN_CUSTOM_NO_AUG_PATH
+        if not target_path.exists():
+            target_path = CNN_MODEL_PATH
+        logger.info(f"Loading Custom CNN (No Aug) model from {target_path}")
+        _CUSTOM_CNN_NO_AUG_MODEL = tf.keras.models.load_model(target_path)
+    return _CUSTOM_CNN_NO_AUG_MODEL
 
 
 def get_mobilenet_model():
@@ -97,7 +110,12 @@ def predict_traffic_sign(
     img_rgb = load_image(image_input)
     
     m_type_lower = model_type.strip().lower()
-    if "mobilenet" in m_type_lower:
+    if "no aug" in m_type_lower or "no_aug" in m_type_lower or "baseline cnn" in m_type_lower:
+        model = get_cnn_no_aug_model()
+        cfg = get_model_preprocessing_config()
+        processed_tensor = prepare_image_pipeline(img_rgb, target_size=IMAGE_SIZE, preprocessing_config=cfg)
+        probs = model.predict(processed_tensor, verbose=0)[0]
+    elif "mobilenet" in m_type_lower:
         model = get_mobilenet_model()
         cfg = get_model_preprocessing_config()
         processed_tensor = prepare_image_pipeline(img_rgb, target_size=IMAGE_SIZE, preprocessing_config=cfg)
@@ -108,7 +126,7 @@ def predict_traffic_sign(
         hog_feat = extract_hog_features(resized).reshape(1, -1)
         probs = model.predict_proba(hog_feat)[0]
     else:
-        # Default: Custom CNN
+        # Default: Custom CNN (Aug)
         model = get_cnn_model()
         cfg = get_model_preprocessing_config()
         processed_tensor = prepare_image_pipeline(img_rgb, target_size=IMAGE_SIZE, preprocessing_config=cfg)

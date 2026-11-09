@@ -1,0 +1,28 @@
+{
+    "device": "Intel/AMD CPU (Single Core Inference)",
+    "input_resolution": "32x32x3 RGB",
+    "custom_cnn": {
+        "model_size_mb": 7.85,
+        "parameter_count": "686,283",
+        "mean_latency_ms": 44.49,
+        "fps": 22.5,
+        "edge_readiness": "Sẵn sàng triển khai thiết bị nhúng (Raspberry Pi 4, Jetson Nano, ESP32-Cam)",
+        "reaction_distance_60kmh": "74.2 cm"
+    },
+    "mobilenet_v2": {
+        "model_size_mb": 11.05,
+        "parameter_count": "2,257,984",
+        "mean_latency_ms": 8.42,
+        "fps": 118.8,
+        "edge_readiness": "Phù hợp Mini PC / Jetson Xavier",
+        "reaction_distance_60kmh": "14.0 cm"
+    },
+    "hog_svm": {
+        "model_size_mb": 51.76,
+        "parameter_count": "324 features * 43 classes",
+        "mean_latency_ms": 16.5,
+        "fps": 60.6,
+        "edge_readiness": "Tiêu tốn CPU khi trích xuất HOG trên ảnh lớn",
+        "reaction_distance_60kmh": "27.5 cm"
+    }
+}

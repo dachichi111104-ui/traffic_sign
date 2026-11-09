@@ -64,6 +64,9 @@ TRAINING_ACCURACY_PATH = RESULT_DIR / "training_accuracy.png"
 TRAINING_LOSS_PATH = RESULT_DIR / "training_loss.png"
 DATASET_DISTRIBUTION_PATH = RESULT_DIR / "dataset_distribution.png"
 PREPROCESSING_EXAMPLES_PATH = RESULT_DIR / "preprocessing_examples.png"
+ROBUSTNESS_METRICS_PATH = RESULT_DIR / "robustness_metrics.json"
+BENCHMARK_COMPARISON_PATH = RESULT_DIR / "benchmark_comparison.json"
+EFFICIENCY_METRICS_PATH = RESULT_DIR / "efficiency_metrics.json"
 
 # GTSRB & Vietnamese Traffic Sign Class Name Dictionary Mapping
 GTSRB_CLASSES = {
