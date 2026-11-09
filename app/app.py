@@ -1,29 +1,72 @@
 import sys
 import os
+from pathlib import Path
+import importlib.util
+
+# 1. Resolve project root (/mount/src/traffic_sign on Streamlit Cloud)
+CURRENT_FILE = Path(__file__).resolve()
+ROOT_DIR = CURRENT_FILE.parent.parent
+SRC_DIR = ROOT_DIR / "src"
+
+# 2. Fix Streamlit Cloud package collision:
+# On Streamlit Cloud, repos are cloned to /mount/src/<repo_name>.
+# The parent directory is named 'src', causing Python's namespace package resolution
+# to mistakenly bind 'src' to '/mount/src' instead of our project's 'src/' folder!
+# We explicitly bind 'src' to ROOT_DIR / 'src' in sys.modules.
+src_init = SRC_DIR / "__init__.py"
+if src_init.exists():
+    spec = importlib.util.spec_from_file_location(
+        "src", str(src_init), submodule_search_locations=[str(SRC_DIR)]
+    )
+    if spec and spec.loader:
+        src_module = importlib.util.module_from_spec(spec)
+        sys.modules["src"] = src_module
+        try:
+            spec.loader.exec_module(src_module)
+        except Exception:
+            pass
+
+# Ensure ROOT_DIR and SRC_DIR are at the absolute top of sys.path
+root_str = str(ROOT_DIR)
+src_str = str(SRC_DIR)
+for p in [src_str, root_str]:
+    while p in sys.path:
+        sys.path.remove(p)
+    sys.path.insert(0, p)
+
 import cv2
 import json
 import numpy as np
 import pandas as pd
-from pathlib import Path
 from PIL import Image
 import streamlit as st
 
-# Ensure project root is at index 0 of sys.path
-ROOT_DIR = Path(__file__).resolve().parent.parent
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
+# Dual-fallback imports to guarantee 100% compatibility across all platforms
+try:
+    from src.config import (
+        RESULT_DIR, MODEL_DIR, CNN_MODEL_PATH, SVM_MODEL_PATH, NUM_CLASSES,
+        EXTERNAL_TEST_DIR, MISCLASSIFIED_DIR, METRICS_JSON_PATH, COMPARISON_CSV_PATH,
+        CONFUSION_MATRIX_CNN_PATH, CONFUSION_MATRIX_SVM_PATH, TRAINING_ACCURACY_PATH, TRAINING_LOSS_PATH,
+        GTSRB_CLASSES, ROBUSTNESS_METRICS_PATH, BENCHMARK_COMPARISON_PATH, EFFICIENCY_METRICS_PATH
+    )
+    from src.data_loader import load_raw_dataset, find_dataset_dir
+    from src.preprocessing import detect_and_crop_traffic_sign, augment_single_image, apply_clahe, resize_image
+    from src.predict import predict_traffic_sign
+    from src.robustness import CORRUPTION_FUNCS, apply_corruption
+    from src.history_db import get_prediction_history, add_prediction_to_history, clear_prediction_history
+except ImportError:
+    from config import (
+        RESULT_DIR, MODEL_DIR, CNN_MODEL_PATH, SVM_MODEL_PATH, NUM_CLASSES,
+        EXTERNAL_TEST_DIR, MISCLASSIFIED_DIR, METRICS_JSON_PATH, COMPARISON_CSV_PATH,
+        CONFUSION_MATRIX_CNN_PATH, CONFUSION_MATRIX_SVM_PATH, TRAINING_ACCURACY_PATH, TRAINING_LOSS_PATH,
+        GTSRB_CLASSES, ROBUSTNESS_METRICS_PATH, BENCHMARK_COMPARISON_PATH, EFFICIENCY_METRICS_PATH
+    )
+    from data_loader import load_raw_dataset, find_dataset_dir
+    from preprocessing import detect_and_crop_traffic_sign, augment_single_image, apply_clahe, resize_image
+    from predict import predict_traffic_sign
+    from robustness import CORRUPTION_FUNCS, apply_corruption
+    from history_db import get_prediction_history, add_prediction_to_history, clear_prediction_history
 
-from src.config import (
-    RESULT_DIR, MODEL_DIR, CNN_MODEL_PATH, SVM_MODEL_PATH, NUM_CLASSES,
-    EXTERNAL_TEST_DIR, MISCLASSIFIED_DIR, METRICS_JSON_PATH, COMPARISON_CSV_PATH,
-    CONFUSION_MATRIX_CNN_PATH, CONFUSION_MATRIX_SVM_PATH, TRAINING_ACCURACY_PATH, TRAINING_LOSS_PATH,
-    GTSRB_CLASSES, ROBUSTNESS_METRICS_PATH, BENCHMARK_COMPARISON_PATH, EFFICIENCY_METRICS_PATH
-)
-from src.data_loader import load_raw_dataset, find_dataset_dir
-from src.preprocessing import detect_and_crop_traffic_sign, augment_single_image, apply_clahe, resize_image
-from src.predict import predict_traffic_sign
-from src.robustness import CORRUPTION_FUNCS, apply_corruption
-from src.history_db import get_prediction_history, add_prediction_to_history, clear_prediction_history
 from app.components.ui_components import (
     apply_custom_theme, render_top_header, render_hero_banner, render_metric_card, render_alert
 )
