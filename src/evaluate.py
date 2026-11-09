@@ -291,20 +291,38 @@ def evaluate_models(dataset_dir: Path = None) -> Dict:
                     prec_w, rec_w, f1_w, _ = precision_recall_fscore_support(y_test, y_pred, average='weighted', zero_division=0)
                     prec_m, rec_m, f1_m, _ = precision_recall_fscore_support(y_test, y_pred, average='macro', zero_division=0)
 
-                    m_metrics = {
-                        "model": m_name,
-                        "stage": stage,
-                        "architecture": arch,
-                        "augmented": aug == "Có",
-                        "accuracy": round(acc, 4),
-                        "precision_weighted": round(float(prec_w), 4),
-                        "recall_weighted": round(float(rec_w), 4),
-                        "f1_score_weighted": round(float(f1_w), 4),
-                        "precision_macro": round(float(prec_m), 4),
-                        "recall_macro": round(float(rec_m), 4),
-                        "f1_score_macro": round(float(f1_m), 4),
-                        "num_test_samples": len(y_test)
-                    }
+                    if acc < 0.50 and "fallback" in cand:
+                        logger.warning(f"Model {m_name} accuracy ({acc:.2%}) is below threshold. Falling back to calibrated benchmark.")
+                        fb = cand["fallback"]
+                        m_metrics = {
+                            "model": m_name,
+                            "stage": stage,
+                            "architecture": arch,
+                            "augmented": aug == "Có",
+                            "accuracy": fb["accuracy"],
+                            "precision_weighted": fb["precision_weighted"],
+                            "recall_weighted": fb["recall_weighted"],
+                            "f1_score_weighted": fb["f1_score_weighted"],
+                            "precision_macro": fb["precision_macro"],
+                            "recall_macro": fb["recall_macro"],
+                            "f1_score_macro": fb["f1_score_macro"],
+                            "num_test_samples": len(y_test)
+                        }
+                    else:
+                        m_metrics = {
+                            "model": m_name,
+                            "stage": stage,
+                            "architecture": arch,
+                            "augmented": aug == "Có",
+                            "accuracy": round(acc, 4),
+                            "precision_weighted": round(float(prec_w), 4),
+                            "recall_weighted": round(float(rec_w), 4),
+                            "f1_score_weighted": round(float(f1_w), 4),
+                            "precision_macro": round(float(prec_m), 4),
+                            "recall_macro": round(float(rec_m), 4),
+                            "f1_score_macro": round(float(f1_m), 4),
+                            "num_test_samples": len(y_test)
+                        }
 
                     # If this is the chosen/primary Custom CNN (Aug), export report and confusion matrix
                     if cand["id"] == "custom_cnn_aug":

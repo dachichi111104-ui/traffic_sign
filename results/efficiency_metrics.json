@@ -4,10 +4,10 @@
     "custom_cnn": {
         "model_size_mb": 7.85,
         "parameter_count": "686,283",
-        "mean_latency_ms": 44.49,
-        "fps": 22.5,
+        "mean_latency_ms": 32.96,
+        "fps": 30.3,
         "edge_readiness": "Sẵn sàng triển khai thiết bị nhúng (Raspberry Pi 4, Jetson Nano, ESP32-Cam)",
-        "reaction_distance_60kmh": "74.2 cm"
+        "reaction_distance_60kmh": "54.9 cm"
     },
     "mobilenet_v2": {
         "model_size_mb": 11.05,

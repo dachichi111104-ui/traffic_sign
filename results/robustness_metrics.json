@@ -1,15 +1,15 @@
 {
-    "timestamp": "2026-11-09 16:56:12",
+    "timestamp": "2026-11-09 23:52:25",
     "test_samples_evaluated": 300,
     "clean_accuracy": {
-        "augmented": 98.0,
-        "no_augmented": 96.18
+        "augmented": 97.67,
+        "no_augmented": 97.67
     },
     "average_retention_index": {
-        "augmented": 70.7,
-        "no_augmented": 61.4
+        "augmented": 76.4,
+        "no_augmented": 65.1
     },
-    "average_robustness_gain": 10.3,
+    "average_robustness_gain": 11.0,
     "corruptions": {
         "gaussian_blur": {
             "name": "Mờ Sương / Mưa Phùn (Gaussian Blur)",
@@ -23,24 +23,24 @@
                 5
             ],
             "accuracy_augmented": [
-                98.0,
-                98.0,
-                82.33,
-                48.67,
-                31.0,
-                21.33
+                97.67,
+                98.33,
+                92.33,
+                62.67,
+                39.67,
+                22.33
             ],
             "accuracy_no_augmented": [
-                96.18,
-                90.98,
-                79.68,
-                60.18,
-                43.68,
-                28.18
+                97.67,
+                97.0,
+                73.33,
+                39.0,
+                19.67,
+                10.0
             ],
-            "retention_augmented": 57.4,
-            "retention_no_augmented": 62.9,
-            "robustness_gain": -4.3
+            "retention_augmented": 64.6,
+            "retention_no_augmented": 48.9,
+            "robustness_gain": 15.3
         },
         "motion_blur": {
             "name": "Rung Lắc / Tốc Độ Cao (Motion Blur)",
@@ -54,24 +54,24 @@
                 5
             ],
             "accuracy_augmented": [
-                98.0,
-                96.67,
-                85.67,
-                74.67,
-                63.67,
-                55.0
+                97.67,
+                96.0,
+                91.33,
+                84.67,
+                77.67,
+                67.67
             ],
             "accuracy_no_augmented": [
-                96.18,
-                89.38,
-                74.18,
-                54.68,
-                40.18,
-                24.68
+                97.67,
+                95.67,
+                85.67,
+                75.0,
+                61.33,
+                49.67
             ],
-            "retention_augmented": 76.7,
-            "retention_no_augmented": 58.9,
-            "robustness_gain": 18.5
+            "retention_augmented": 85.5,
+            "retention_no_augmented": 75.2,
+            "robustness_gain": 10.0
         },
         "low_light": {
             "name": "Ban Đêm / Thiếu Sáng (Low Light)",
@@ -85,24 +85,24 @@
                 5
             ],
             "accuracy_augmented": [
+                97.67,
                 98.0,
-                98.67,
-                98.67,
-                90.67,
-                74.0,
-                32.67
+                98.0,
+                95.0,
+                87.33,
+                53.67
             ],
             "accuracy_no_augmented": [
-                96.18,
-                91.68,
-                81.98,
-                67.68,
-                52.18,
-                34.98
+                97.67,
+                98.67,
+                97.33,
+                86.67,
+                71.0,
+                25.67
             ],
-            "retention_augmented": 80.5,
-            "retention_no_augmented": 68.3,
-            "robustness_gain": 13.2
+            "retention_augmented": 88.5,
+            "retention_no_augmented": 77.7,
+            "robustness_gain": 10.5
         },
         "overexposure": {
             "name": "Chói Nắng Gắt (Overexposure)",
@@ -116,24 +116,24 @@
                 5
             ],
             "accuracy_augmented": [
-                98.0,
                 97.67,
                 97.0,
-                96.33,
-                94.0,
-                91.67
+                97.0,
+                95.33,
+                94.33,
+                92.67
             ],
             "accuracy_no_augmented": [
-                96.18,
-                92.38,
-                84.18,
-                71.68,
-                56.38,
-                40.78
+                97.67,
+                97.0,
+                94.67,
+                92.67,
+                90.0,
+                87.33
             ],
-            "retention_augmented": 97.3,
-            "retention_no_augmented": 71.8,
-            "robustness_gain": 26.3
+            "retention_augmented": 97.5,
+            "retention_no_augmented": 94.5,
+            "robustness_gain": 2.9
         },
         "sensor_noise": {
             "name": "Nhiễu Cảm Biến Camera (Sensor Noise)",
@@ -147,24 +147,24 @@
                 5
             ],
             "accuracy_augmented": [
-                98.0,
-                80.0,
-                62.0,
-                50.0,
-                45.67,
-                35.33
+                97.67,
+                86.67,
+                67.33,
+                59.0,
+                51.67,
+                43.67
             ],
             "accuracy_no_augmented": [
-                96.18,
-                88.68,
-                70.78,
-                50.18,
-                32.98,
-                19.68
+                97.67,
+                77.0,
+                53.67,
+                38.67,
+                25.67,
+                17.33
             ],
-            "retention_augmented": 55.7,
-            "retention_no_augmented": 54.5,
-            "robustness_gain": 2.1
+            "retention_augmented": 63.1,
+            "retention_no_augmented": 43.5,
+            "robustness_gain": 19.2
         },
         "occlusion": {
             "name": "Bị Che Khuất 1 Phần (Occlusion)",
@@ -178,25 +178,25 @@
                 5
             ],
             "accuracy_augmented": [
-                98.0,
-                92.33,
-                80.0,
-                58.33,
-                34.67,
-                13.67
+                97.67,
+                94.0,
+                84.33,
+                63.33,
+                34.33,
+                12.67
             ],
             "accuracy_no_augmented": [
-                96.18,
-                87.38,
-                66.68,
-                47.18,
-                30.68,
-                18.0
+                97.67,
+                88.67,
+                75.67,
+                49.0,
+                24.67,
+                10.33
             ],
-            "retention_augmented": 56.9,
-            "retention_no_augmented": 52.0,
-            "robustness_gain": 5.8
+            "retention_augmented": 59.1,
+            "retention_no_augmented": 50.9,
+            "robustness_gain": 8.1
         }
     },
-    "academic_conclusion": "Thực nghiệm kiểm thử độ bền (Stress Testing) chứng minh rõ ràng: Khi đối mặt với 6 điều kiện thời tiết và ngoại cảnh khắc nghiệt, mô hình KHÔNG tăng cường bị sụt giảm trung bình đến 34.6% độ chính xác (chỉ giữ được 61.4% hiệu năng), trong khi mô hình CÓ tăng cường duy trì được 70.7% hiệu năng ban đầu (vượt trội +10.3% độ chính xác). Điều này chứng minh Data Augmentation không chỉ giúp tăng điểm số trong phòng thí nghiệm, mà là lớp phòng thủ cốt tử giúp hệ thống xe tự hành nhận diện an toàn ngoài thực tế."
+    "academic_conclusion": "Thực nghiệm kiểm thử độ bền (Stress Testing) chứng minh rõ ràng: Khi đối mặt với 6 điều kiện thời tiết và ngoại cảnh khắc nghiệt, mô hình KHÔNG tăng cường bị sụt giảm trung bình đến 34.6% độ chính xác (chỉ giữ được 65.1% hiệu năng), trong khi mô hình CÓ tăng cường duy trì được 76.4% hiệu năng ban đầu (vượt trội +11.0% độ chính xác). Điều này chứng minh Data Augmentation không chỉ giúp tăng điểm số trong phòng thí nghiệm, mà là lớp phòng thủ cốt tử giúp hệ thống xe tự hành nhận diện an toàn ngoài thực tế."
 }

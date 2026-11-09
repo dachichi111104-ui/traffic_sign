@@ -1,0 +1,26 @@
+{
+    "dataset_path": "C:\\Downloads\\sigange\\data\\raw\\GTSRB\\Train",
+    "is_sample_dataset": false,
+    "num_classes": 43,
+    "model_type": "custom",
+    "augmented": false,
+    "trained_timestamp": "2026-11-09 23:48:43",
+    "epochs_run": 5,
+    "final_train_acc": 0.9684,
+    "final_val_acc": 0.993,
+    "preprocessing_config": {
+        "model_type": "custom",
+        "augment": false,
+        "use_clahe": true,
+        "use_gamma": false,
+        "use_unsharp": false,
+        "norm_type": "minmax",
+        "target_size": [
+            32,
+            32
+        ],
+        "train_mean": null,
+        "train_std": null,
+        "sampling_method": "none"
+    }
+}
