@@ -16,7 +16,7 @@ try:
         SVM_MODEL_PATH, SVM_NO_AUG_PATH, SVM_AUG_PATH,
         CLASS_MAPPING_PATH, GTSRB_CLASSES, IMAGE_SIZE, EXTERNAL_TEST_DIR, MODEL_METADATA_PATH
     )
-    from src.preprocessing import prepare_image_pipeline, load_image, resize_image
+    from src.preprocessing import prepare_image_pipeline, load_image, resize_image, detect_and_crop_traffic_sign, apply_unsharp_mask, apply_clahe
     from src.feature_extraction import extract_hog_features
 except ImportError:
     from config import (
@@ -25,7 +25,7 @@ except ImportError:
         SVM_MODEL_PATH, SVM_NO_AUG_PATH, SVM_AUG_PATH,
         CLASS_MAPPING_PATH, GTSRB_CLASSES, IMAGE_SIZE, EXTERNAL_TEST_DIR, MODEL_METADATA_PATH
     )
-    from preprocessing import prepare_image_pipeline, load_image, resize_image
+    from preprocessing import prepare_image_pipeline, load_image, resize_image, detect_and_crop_traffic_sign, apply_unsharp_mask, apply_clahe
     from feature_extraction import extract_hog_features
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -123,6 +123,25 @@ def predict_traffic_sign(
     Supports: "Custom CNN", "MobileNetV2", "HOG + SVM"
     """
     img_rgb = load_image(image_input)
+    
+    # 1. Automatic Traffic Sign Detection & Cropping if image is a full-scene photo (>120px)
+    if img_rgb.shape[0] > 120 or img_rgb.shape[1] > 120:
+        try:
+            cropped_candidate, bbox = detect_and_crop_traffic_sign(img_rgb)
+            if bbox is not None:
+                img_rgb = cropped_candidate
+        except Exception:
+            pass
+
+    # 2. Adaptive Deblurring if camera image is out of focus / blurry (Laplacian variance < 50)
+    try:
+        import cv2
+        gray_check = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
+        blur_var = float(cv2.Laplacian(gray_check, cv2.CV_64F).var())
+        if blur_var < 50.0:
+            img_rgb = apply_unsharp_mask(apply_clahe(img_rgb), amount=2.5)
+    except Exception:
+        pass
     
     m_type_lower = model_type.strip().lower()
     if "no aug" in m_type_lower or "no_aug" in m_type_lower or "baseline cnn" in m_type_lower:

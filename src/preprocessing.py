@@ -67,33 +67,33 @@ def detect_and_crop_traffic_sign(image: Union[str, Path, np.ndarray, bytes]) -> 
     # Convert to HSV color space
     hsv = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2HSV)
     
-    # 1. Red Mask (Stop, Speed limits, Danger triangles, No Entry)
-    lower_red1, upper_red1 = np.array([0, 70, 50]), np.array([10, 255, 255])
-    lower_red2, upper_red2 = np.array([160, 70, 50]), np.array([180, 255, 255])
+    # 1. Red Mask (Stop, Speed limits, Danger triangles, No Entry) - Relaxed saturation for daylight / desaturated outdoor signs
+    lower_red1, upper_red1 = np.array([0, 25, 30]), np.array([15, 255, 255])
+    lower_red2, upper_red2 = np.array([145, 25, 30]), np.array([180, 255, 255])
     mask_red1 = cv2.inRange(hsv, lower_red1, upper_red1)
     mask_red2 = cv2.inRange(hsv, lower_red2, upper_red2)
     mask_red = cv2.bitwise_or(mask_red1, mask_red2)
     
     # 2. Blue Mask (Mandatory / Direction signs)
-    lower_blue, upper_blue = np.array([95, 80, 50]), np.array([135, 255, 255])
+    lower_blue, upper_blue = np.array([90, 35, 30]), np.array([140, 255, 255])
     mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
     
     # 3. Yellow Mask (Warning signs)
-    lower_yellow, upper_yellow = np.array([15, 80, 80]), np.array([35, 255, 255])
+    lower_yellow, upper_yellow = np.array([15, 35, 50]), np.array([38, 255, 255])
     mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
     
     # Combine all sign color masks
     combined_mask = cv2.bitwise_or(mask_red, cv2.bitwise_or(mask_blue, mask_yellow))
     
-    # Morphological cleaning to close small holes
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+    # Morphological cleaning to close small holes and connect broken borders
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
     combined_mask = cv2.morphologyEx(combined_mask, cv2.MORPH_CLOSE, kernel)
     
     contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     best_bbox = None
     max_area = 0
-    min_sign_area = (h * w) * 0.001  # At least 0.1% of image size
+    min_sign_area = (h * w) * 0.003  # At least 0.3% of image size
     
     for cnt in contours:
         area = cv2.contourArea(cnt)
@@ -103,17 +103,17 @@ def detect_and_crop_traffic_sign(image: Union[str, Path, np.ndarray, bytes]) -> 
         x, y, bw, bh = cv2.boundingRect(cnt)
         aspect_ratio = float(bw) / bh if bh > 0 else 0
         
-        # Traffic signs are roughly square/circle/triangle/octagon (aspect ratio between 0.5 and 1.6)
-        if 0.5 <= aspect_ratio <= 1.6:
+        # Traffic signs are roughly square/circle/triangle/octagon (aspect ratio between 0.55 and 1.55)
+        if 0.55 <= aspect_ratio <= 1.55:
             if area > max_area:
                 max_area = area
                 best_bbox = (x, y, bw, bh)
                 
     if best_bbox is not None:
         bx, by, bw, bh = best_bbox
-        # Add 15% padding around bounding box
-        pad_x = int(bw * 0.15)
-        pad_y = int(bh * 0.15)
+        # Add 10% padding around bounding box to preserve full outer rim
+        pad_x = int(bw * 0.10)
+        pad_y = int(bh * 0.10)
         
         x1 = max(0, bx - pad_x)
         y1 = max(0, by - pad_y)
