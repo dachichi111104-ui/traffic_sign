@@ -1,16 +1,5 @@
 [
     {
-        "index": 186,
-        "true_class": 42,
-        "true_name_vi": "Hết cấm xe tải vượt (DP.134)",
-        "true_name_en": "End of no passing by vehicles over 3.5 metric tons",
-        "pred_class": 41,
-        "pred_name_vi": "Hết cấm vượt (DP.133)",
-        "pred_name_en": "End of no passing",
-        "confidence": 87.47,
-        "image_filename": "misclassified_000_true_42_pred_41.png"
-    },
-    {
         "index": 223,
         "true_class": 5,
         "true_name_vi": "Giới hạn tốc độ 80km/h (P.127)",
@@ -18,161 +7,51 @@
         "pred_class": 8,
         "pred_name_vi": "Giới hạn tốc độ 120km/h",
         "pred_name_en": "Speed limit (120km/h)",
-        "confidence": 40.81,
-        "image_filename": "misclassified_001_true_5_pred_8.png"
+        "confidence": 46.3,
+        "image_filename": "misclassified_000_true_5_pred_8.png"
     },
     {
-        "index": 473,
-        "true_class": 9,
-        "true_name_vi": "Cấm vượt (P.125)",
-        "true_name_en": "No passing",
-        "pred_class": 16,
-        "pred_name_vi": "Cấm xe tải (P.106a)",
-        "pred_name_en": "Vehicles over 3.5 metric tons prohibited",
-        "confidence": 70.06,
-        "image_filename": "misclassified_002_true_9_pred_16.png"
-    },
-    {
-        "index": 890,
-        "true_class": 2,
-        "true_name_vi": "Giới hạn tốc độ 50km/h (P.127)",
-        "true_name_en": "Speed limit (50km/h)",
-        "pred_class": 4,
-        "pred_name_vi": "Giới hạn tốc độ 70km/h (P.127)",
-        "pred_name_en": "Speed limit (70km/h)",
-        "confidence": 53.62,
-        "image_filename": "misclassified_003_true_2_pred_4.png"
-    },
-    {
-        "index": 1196,
-        "true_class": 12,
-        "true_name_vi": "Đường ưu tiên (I.401)",
-        "true_name_en": "Priority road",
-        "pred_class": 32,
-        "pred_name_vi": "Hết mọi lệnh cấm (DP.135)",
-        "pred_name_en": "End of all speed and passing limits",
-        "confidence": 63.05,
-        "image_filename": "misclassified_004_true_12_pred_32.png"
-    },
-    {
-        "index": 1743,
-        "true_class": 2,
-        "true_name_vi": "Giới hạn tốc độ 50km/h (P.127)",
-        "true_name_en": "Speed limit (50km/h)",
-        "pred_class": 5,
-        "pred_name_vi": "Giới hạn tốc độ 80km/h (P.127)",
-        "pred_name_en": "Speed limit (80km/h)",
-        "confidence": 92.41,
-        "image_filename": "misclassified_005_true_2_pred_5.png"
-    },
-    {
-        "index": 1946,
-        "true_class": 28,
-        "true_name_vi": "Trẻ em sang đường (W.225)",
-        "true_name_en": "Children crossing",
-        "pred_class": 30,
-        "pred_name_vi": "Cảnh báo băng tuyết (W.231)",
-        "pred_name_en": "Beware of ice/snow",
-        "confidence": 58.51,
-        "image_filename": "misclassified_006_true_28_pred_30.png"
-    },
-    {
-        "index": 2175,
-        "true_class": 5,
-        "true_name_vi": "Giới hạn tốc độ 80km/h (P.127)",
-        "true_name_en": "Speed limit (80km/h)",
-        "pred_class": 1,
-        "pred_name_vi": "Giới hạn tốc độ 30km/h (P.127)",
-        "pred_name_en": "Speed limit (30km/h)",
-        "confidence": 88.75,
-        "image_filename": "misclassified_007_true_5_pred_1.png"
-    },
-    {
-        "index": 2262,
-        "true_class": 2,
-        "true_name_vi": "Giới hạn tốc độ 50km/h (P.127)",
-        "true_name_en": "Speed limit (50km/h)",
-        "pred_class": 5,
-        "pred_name_vi": "Giới hạn tốc độ 80km/h (P.127)",
-        "pred_name_en": "Speed limit (80km/h)",
-        "confidence": 52.09,
-        "image_filename": "misclassified_008_true_2_pred_5.png"
-    },
-    {
-        "index": 2428,
-        "true_class": 3,
-        "true_name_vi": "Giới hạn tốc độ 60km/h (P.127)",
-        "true_name_en": "Speed limit (60km/h)",
-        "pred_class": 5,
-        "pred_name_vi": "Giới hạn tốc độ 80km/h (P.127)",
-        "pred_name_en": "Speed limit (80km/h)",
-        "confidence": 79.66,
-        "image_filename": "misclassified_009_true_3_pred_5.png"
-    },
-    {
-        "index": 3679,
-        "true_class": 4,
-        "true_name_vi": "Giới hạn tốc độ 70km/h (P.127)",
-        "true_name_en": "Speed limit (70km/h)",
-        "pred_class": 8,
-        "pred_name_vi": "Giới hạn tốc độ 120km/h",
-        "pred_name_en": "Speed limit (120km/h)",
-        "confidence": 70.52,
-        "image_filename": "misclassified_010_true_4_pred_8.png"
-    },
-    {
-        "index": 4145,
-        "true_class": 2,
-        "true_name_vi": "Giới hạn tốc độ 50km/h (P.127)",
-        "true_name_en": "Speed limit (50km/h)",
-        "pred_class": 1,
-        "pred_name_vi": "Giới hạn tốc độ 30km/h (P.127)",
-        "pred_name_en": "Speed limit (30km/h)",
-        "confidence": 58.17,
-        "image_filename": "misclassified_011_true_2_pred_1.png"
-    },
-    {
-        "index": 4587,
+        "index": 273,
         "true_class": 5,
         "true_name_vi": "Giới hạn tốc độ 80km/h (P.127)",
         "true_name_en": "Speed limit (80km/h)",
         "pred_class": 3,
         "pred_name_vi": "Giới hạn tốc độ 60km/h (P.127)",
         "pred_name_en": "Speed limit (60km/h)",
-        "confidence": 92.86,
-        "image_filename": "misclassified_012_true_5_pred_3.png"
+        "confidence": 95.18,
+        "image_filename": "misclassified_001_true_5_pred_3.png"
     },
     {
-        "index": 5263,
-        "true_class": 1,
-        "true_name_vi": "Giới hạn tốc độ 30km/h (P.127)",
-        "true_name_en": "Speed limit (30km/h)",
-        "pred_class": 6,
-        "pred_name_vi": "Hết hạn chế tốc độ 80km/h",
-        "pred_name_en": "End of speed limit (80km/h)",
-        "confidence": 65.31,
-        "image_filename": "misclassified_013_true_1_pred_6.png"
+        "index": 1403,
+        "true_class": 18,
+        "true_name_vi": "Cảnh báo nguy hiểm chung (W.233)",
+        "true_name_en": "General caution",
+        "pred_class": 31,
+        "pred_name_vi": "Động vật hoang dã cắt ngang (W.232)",
+        "pred_name_en": "Wild animals crossing",
+        "confidence": 61.97,
+        "image_filename": "misclassified_002_true_18_pred_31.png"
     },
     {
-        "index": 5285,
-        "true_class": 2,
-        "true_name_vi": "Giới hạn tốc độ 50km/h (P.127)",
-        "true_name_en": "Speed limit (50km/h)",
-        "pred_class": 1,
-        "pred_name_vi": "Giới hạn tốc độ 30km/h (P.127)",
-        "pred_name_en": "Speed limit (30km/h)",
-        "confidence": 60.17,
-        "image_filename": "misclassified_014_true_2_pred_1.png"
+        "index": 1810,
+        "true_class": 35,
+        "true_name_vi": "Đi thẳng bắt buộc (R.301a)",
+        "true_name_en": "Ahead only",
+        "pred_class": 38,
+        "pred_name_vi": "Đi bên phải (R.302a)",
+        "pred_name_en": "Keep right",
+        "confidence": 70.83,
+        "image_filename": "misclassified_003_true_35_pred_38.png"
     },
     {
-        "index": 5293,
-        "true_class": 2,
-        "true_name_vi": "Giới hạn tốc độ 50km/h (P.127)",
-        "true_name_en": "Speed limit (50km/h)",
-        "pred_class": 1,
-        "pred_name_vi": "Giới hạn tốc độ 30km/h (P.127)",
-        "pred_name_en": "Speed limit (30km/h)",
-        "confidence": 54.03,
-        "image_filename": ""
+        "index": 1946,
+        "true_class": 28,
+        "true_name_vi": "Trẻ em sang đường (W.225)",
+        "true_name_en": "Children crossing",
+        "pred_class": 29,
+        "pred_name_vi": "Xe đạp sang đường (W.226)",
+        "pred_name_en": "Bicycles crossing",
+        "confidence": 93.24,
+        "image_filename": "misclassified_004_true_28_pred_29.png"
     }
 ]

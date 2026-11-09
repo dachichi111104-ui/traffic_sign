@@ -1,15 +1,15 @@
 {
-    "timestamp": "2026-11-09 23:52:25",
+    "timestamp": "2026-11-10 03:35:08",
     "test_samples_evaluated": 300,
     "clean_accuracy": {
-        "augmented": 97.67,
+        "augmented": 98.33,
         "no_augmented": 97.67
     },
     "average_retention_index": {
-        "augmented": 76.4,
+        "augmented": 78.1,
         "no_augmented": 65.1
     },
-    "average_robustness_gain": 11.0,
+    "average_robustness_gain": 13.2,
     "corruptions": {
         "gaussian_blur": {
             "name": "Mờ Sương / Mưa Phùn (Gaussian Blur)",
@@ -23,11 +23,11 @@
                 5
             ],
             "accuracy_augmented": [
-                97.67,
                 98.33,
-                92.33,
-                62.67,
-                39.67,
+                98.0,
+                92.67,
+                71.67,
+                38.33,
                 22.33
             ],
             "accuracy_no_augmented": [
@@ -38,9 +38,9 @@
                 19.67,
                 10.0
             ],
-            "retention_augmented": 64.6,
+            "retention_augmented": 65.7,
             "retention_no_augmented": 48.9,
-            "robustness_gain": 15.3
+            "robustness_gain": 16.8
         },
         "motion_blur": {
             "name": "Rung Lắc / Tốc Độ Cao (Motion Blur)",
@@ -54,12 +54,12 @@
                 5
             ],
             "accuracy_augmented": [
-                97.67,
-                96.0,
-                91.33,
-                84.67,
-                77.67,
-                67.67
+                98.33,
+                97.0,
+                94.0,
+                83.0,
+                73.67,
+                66.67
             ],
             "accuracy_no_augmented": [
                 97.67,
@@ -69,9 +69,9 @@
                 61.33,
                 49.67
             ],
-            "retention_augmented": 85.5,
+            "retention_augmented": 84.3,
             "retention_no_augmented": 75.2,
-            "robustness_gain": 10.0
+            "robustness_gain": 9.4
         },
         "low_light": {
             "name": "Ban Đêm / Thiếu Sáng (Low Light)",
@@ -85,12 +85,12 @@
                 5
             ],
             "accuracy_augmented": [
-                97.67,
-                98.0,
-                98.0,
-                95.0,
-                87.33,
-                53.67
+                98.33,
+                98.33,
+                98.33,
+                94.67,
+                90.33,
+                60.33
             ],
             "accuracy_no_augmented": [
                 97.67,
@@ -100,9 +100,9 @@
                 71.0,
                 25.67
             ],
-            "retention_augmented": 88.5,
+            "retention_augmented": 89.9,
             "retention_no_augmented": 77.7,
-            "robustness_gain": 10.5
+            "robustness_gain": 12.5
         },
         "overexposure": {
             "name": "Chói Nắng Gắt (Overexposure)",
@@ -116,12 +116,12 @@
                 5
             ],
             "accuracy_augmented": [
-                97.67,
-                97.0,
-                97.0,
-                95.33,
-                94.33,
-                92.67
+                98.33,
+                97.33,
+                96.33,
+                95.67,
+                96.0,
+                93.0
             ],
             "accuracy_no_augmented": [
                 97.67,
@@ -131,9 +131,9 @@
                 90.0,
                 87.33
             ],
-            "retention_augmented": 97.5,
+            "retention_augmented": 97.3,
             "retention_no_augmented": 94.5,
-            "robustness_gain": 2.9
+            "robustness_gain": 3.3
         },
         "sensor_noise": {
             "name": "Nhiễu Cảm Biến Camera (Sensor Noise)",
@@ -147,12 +147,12 @@
                 5
             ],
             "accuracy_augmented": [
-                97.67,
-                86.67,
-                67.33,
-                59.0,
-                51.67,
-                43.67
+                98.33,
+                90.0,
+                76.33,
+                69.67,
+                63.0,
+                52.67
             ],
             "accuracy_no_augmented": [
                 97.67,
@@ -162,9 +162,9 @@
                 25.67,
                 17.33
             ],
-            "retention_augmented": 63.1,
+            "retention_augmented": 71.5,
             "retention_no_augmented": 43.5,
-            "robustness_gain": 19.2
+            "robustness_gain": 27.9
         },
         "occlusion": {
             "name": "Bị Che Khuất 1 Phần (Occlusion)",
@@ -178,12 +178,12 @@
                 5
             ],
             "accuracy_augmented": [
-                97.67,
-                94.0,
-                84.33,
-                63.33,
-                34.33,
-                12.67
+                98.33,
+                92.67,
+                85.33,
+                65.67,
+                35.0,
+                14.67
             ],
             "accuracy_no_augmented": [
                 97.67,
@@ -193,10 +193,10 @@
                 24.67,
                 10.33
             ],
-            "retention_augmented": 59.1,
+            "retention_augmented": 59.7,
             "retention_no_augmented": 50.9,
-            "robustness_gain": 8.1
+            "robustness_gain": 9.0
         }
     },
-    "academic_conclusion": "Thực nghiệm kiểm thử độ bền (Stress Testing) chứng minh rõ ràng: Khi đối mặt với 6 điều kiện thời tiết và ngoại cảnh khắc nghiệt, mô hình KHÔNG tăng cường bị sụt giảm trung bình đến 34.6% độ chính xác (chỉ giữ được 65.1% hiệu năng), trong khi mô hình CÓ tăng cường duy trì được 76.4% hiệu năng ban đầu (vượt trội +11.0% độ chính xác). Điều này chứng minh Data Augmentation không chỉ giúp tăng điểm số trong phòng thí nghiệm, mà là lớp phòng thủ cốt tử giúp hệ thống xe tự hành nhận diện an toàn ngoài thực tế."
+    "academic_conclusion": "Thực nghiệm kiểm thử độ bền (Stress Testing) chứng minh rõ ràng: Khi đối mặt với 6 điều kiện thời tiết và ngoại cảnh khắc nghiệt, mô hình KHÔNG tăng cường bị sụt giảm trung bình đến 34.6% độ chính xác (chỉ giữ được 65.1% hiệu năng), trong khi mô hình CÓ tăng cường duy trì được 78.1% hiệu năng ban đầu (vượt trội +13.2% độ chính xác). Điều này chứng minh Data Augmentation không chỉ giúp tăng điểm số trong phòng thí nghiệm, mà là lớp phòng thủ cốt tử giúp hệ thống xe tự hành nhận diện an toàn ngoài thực tế."
 }

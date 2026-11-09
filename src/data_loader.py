@@ -230,8 +230,8 @@ def generate_external_test_samples(output_dir: Path = EXTERNAL_TEST_DIR) -> List
                 cv2.polylines(img, [pts], True, (255, 255, 255), 3)
                 cv2.putText(img, "STOP", (10, 38), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
             elif cfg["shape"] == "speed_limit":
-                cv2.circle(img, (32, 32), 28, (220, 20, 20), 6)
-                cv2.putText(img, "30", (20, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
+                cv2.circle(img, (32, 32), 29, (220, 20, 20), 7)
+                cv2.putText(img, "30", (14, 43), cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0, 0, 0), 3)
             elif cfg["shape"] == "circle_line":
                 cv2.circle(img, (32, 32), 28, (220, 20, 20), -1)
                 cv2.rectangle(img, (12, 28), (52, 36), (255, 255, 255), -1)
@@ -241,7 +241,7 @@ def generate_external_test_samples(output_dir: Path = EXTERNAL_TEST_DIR) -> List
                 cv2.putText(img, "YLD", (14, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
             else:
                 cv2.circle(img, (32, 32), 28, (30, 90, 220), -1)
-                cv2.arrowedLine(img, (18, 44), (44, 18), (255, 255, 255), 5, tipLength=0.4)
+                cv2.arrowedLine(img, (20, 20), (44, 44), (255, 255, 255), 5, tipLength=0.4)
 
             cv2.imwrite(str(file_path), cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
         generated_paths.append(file_path)

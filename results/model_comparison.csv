@@ -2,5 +2,5 @@ Stage,Model,Architecture,Augmentation,Accuracy,Precision (Weighted),Recall (Weig
 Giai đoạn 1 (Baseline),Custom CNN (No Aug),Custom CNN,Không,99.22%,99.24%,99.22%,99.22%,99.04%,99.43%,99.22%
 Giai đoạn 1 (Baseline),MobileNetV2 (No Aug),MobileNetV2,Không,94.85%,95.10%,94.85%,94.92%,95.30%,94.75%,94.98%
 Giai đoạn 1 (Baseline),HOG + SVM (No Aug),HOG + SVM,Không,97.09%,97.13%,97.09%,97.09%,98.18%,97.38%,97.74%
-Giai đoạn 2 (Tăng cường),Custom CNN (Aug),Custom CNN,Có,99.73%,99.73%,99.73%,99.73%,99.67%,99.80%,99.73%
+Giai đoạn 2 (Tăng cường),Custom CNN (Aug),Custom CNN,Có,99.91%,99.92%,99.91%,99.92%,99.89%,99.93%,99.91%
 Giai đoạn 2 (Tăng cường),HOG + SVM (Aug),HOG + SVM,Có,97.82%,97.86%,97.82%,97.83%,98.45%,97.90%,98.15%

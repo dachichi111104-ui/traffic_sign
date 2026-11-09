@@ -81,32 +81,36 @@ def build_cnn_model(input_shape=INPUT_SHAPE, num_classes=43, dropout_rate=DROPOU
 
 def build_transfer_learning_model(input_shape=INPUT_SHAPE, num_classes=43, learning_rate=LEARNING_RATE):
     """
-    Builds MobileNetV2 Model optimized for Traffic Sign Recognition.
-    Full end-to-end training enables deep convolutional filters to specialize
-    in fine geometric features (stroke curvature, arrows, digit glyphs).
+    Builds MobileNetV2 Model optimized for Traffic Sign Recognition via Transfer Learning.
+    Upsamples 32x32 to 96x96 and leverages pretrained ImageNet feature extractors
+    to prevent spatial dimensional collapse on small 32x32 sign icons.
     """
+    inputs = layers.Input(shape=input_shape)
+    upsampled = layers.UpSampling2D(size=(3, 3), interpolation='bilinear')(inputs)
+    rescaled = layers.Lambda(lambda x: (x * 2.0) - 1.0)(upsampled)
+
     base_model = tf.keras.applications.MobileNetV2(
-        input_shape=input_shape,
+        input_shape=(96, 96, 3),
         include_top=False,
-        weights=None  # Initialize weights suited for 32x32 domain instead of rigid 224x224 ImageNet
+        weights='imagenet'
     )
-    base_model.trainable = True
+    base_model.trainable = False
 
-    model = models.Sequential([
-        base_model,
-        layers.GlobalAveragePooling2D(),
-        layers.BatchNormalization(),
-        layers.Dense(256, activation='relu'),
-        layers.Dropout(0.3),
-        layers.Dense(num_classes, activation='softmax')
-    ], name="Traffic_Sign_MobileNetV2")
+    features = base_model(rescaled, training=False)
+    x = layers.GlobalAveragePooling2D()(features)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dense(256, activation='relu')(x)
+    x = layers.Dropout(0.3)(x)
+    outputs = layers.Dense(num_classes, activation='softmax')(x)
 
+    model = models.Model(inputs=inputs, outputs=outputs, name="Traffic_Sign_MobileNetV2")
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
         loss='sparse_categorical_crossentropy',
         metrics=['accuracy']
     )
     return model
+
 
 
 def plot_and_save_training_curves(history_dict: dict):

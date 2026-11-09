@@ -618,12 +618,12 @@ def augment_single_image(image: np.ndarray) -> np.ndarray:
     M_shift = np.float32([[1, 0, tx], [0, 1, ty]])
     aug = cv2.warpAffine(aug, M_shift, (w, h), borderMode=cv2.BORDER_REFLECT_101)
 
-    # 4. Condition A: Blur (Motion blur or Gaussian blur) - 40% chance
-    if np.random.rand() < 0.40:
+    # 4. Condition A: Blur (Motion blur or Gaussian blur) - 45% chance
+    if np.random.rand() < 0.45:
         if np.random.rand() < 0.5:
             # Gaussian blur (defocus / fog / rain)
             ksize = int(np.random.choice([3, 5]))
-            sigma = float(np.random.uniform(0.6, 1.6))
+            sigma = float(np.random.uniform(0.6, 2.0))
             aug = cv2.GaussianBlur(aug, (ksize, ksize), sigma)
         else:
             # Motion blur (high speed)
@@ -636,23 +636,23 @@ def augment_single_image(image: np.ndarray) -> np.ndarray:
             kernel /= float(ksize)
             aug = cv2.filter2D(aug, -1, kernel)
 
-    # 5. Condition B: Lighting Variations (Low light OR Overexposure) - 35% chance
-    if np.random.rand() < 0.35:
+    # 5. Condition B: Lighting Variations (Low light OR Overexposure) - 40% chance
+    if np.random.rand() < 0.40:
         if np.random.rand() < 0.6:
             # Low light / Night / Tunnel
-            factor = float(np.random.uniform(0.35, 0.75))
-            gamma = float(np.random.uniform(0.6, 0.9))
+            factor = float(np.random.uniform(0.30, 0.75))
+            gamma = float(np.random.uniform(0.5, 0.9))
             inv_gamma = 1.0 / gamma
             lut = np.array([((i / 255.0) ** inv_gamma) * 255 for i in range(256)]).astype(np.uint8)
             aug = cv2.LUT(np.clip(aug.astype(np.float32) * factor, 0, 255).astype(np.uint8), lut)
         else:
             # Overexposure / Direct sun glare
-            factor = float(np.random.uniform(1.2, 1.6))
+            factor = float(np.random.uniform(1.2, 1.7))
             aug = np.clip(aug.astype(np.float32) * factor, 0, 255).astype(np.uint8)
 
-    # 6. Condition C: Sensor Noise (Dashcam ISO grain) - 25% chance
-    if np.random.rand() < 0.25:
-        noise_std = float(np.random.uniform(6.0, 16.0))
+    # 6. Condition C: Sensor Noise (Dashcam ISO grain & Speckle) - 40% chance
+    if np.random.rand() < 0.40:
+        noise_std = float(np.random.uniform(6.0, 26.0))
         noise = np.random.normal(0, noise_std, aug.shape)
         aug = np.clip(aug.astype(np.float32) + noise, 0, 255).astype(np.uint8)
 

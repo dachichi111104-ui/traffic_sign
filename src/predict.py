@@ -95,14 +95,20 @@ def get_svm_model():
     return _SVM_MODEL
 
 
-def get_model_preprocessing_config() -> Dict:
-    if MODEL_METADATA_PATH.exists():
-        try:
-            with open(MODEL_METADATA_PATH, "r", encoding="utf-8") as f:
-                meta = json.load(f)
-                return meta.get("preprocessing_config", {})
-        except Exception:
-            pass
+def get_model_preprocessing_config(model_tag: str = "custom_aug") -> Dict:
+    model_dir = MODEL_METADATA_PATH.parent
+    candidate_paths = [
+        model_dir / f"metadata_{model_tag}.json",
+        MODEL_METADATA_PATH
+    ]
+    for p in candidate_paths:
+        if p.exists():
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    meta = json.load(f)
+                    return meta.get("preprocessing_config", {})
+            except Exception:
+                pass
     return {
         "use_clahe": True,
         "use_gamma": False,
@@ -145,9 +151,9 @@ def predict_traffic_sign(
         # A. High-Frequency Sensor / High ISO Noise Suppression
         med_gray = cv2.medianBlur(gray_check, 3)
         noise_level = float(np.mean(cv2.absdiff(gray_check, med_gray)))
-        if noise_level > 5.0:
-            # Grain/speckle noise detected: clean with median filter to preserve digit stroke edges
-            img_rgb = cv2.medianBlur(img_rgb, 3)
+        if noise_level > 4.5:
+            # Grain/speckle noise detected: clean with edge-preserving bilateral filter
+            img_rgb = cv2.bilateralFilter(img_rgb, 3, 30, 30)
             gray_check = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
             mean_lum = float(np.mean(gray_check))
 
@@ -160,7 +166,8 @@ def predict_traffic_sign(
 
         # C. Defocus / Optical Blur Correction
         blur_var = float(cv2.Laplacian(gray_check, cv2.CV_64F).var())
-        if blur_var < 50.0 and noise_level <= 5.0:
+        if blur_var < 50.0 and noise_level <= 4.5:
+            # Optical blur detected without high noise: apply CLAHE + Unsharp Masking
             img_rgb = apply_unsharp_mask(apply_clahe(img_rgb), amount=2.0)
     except Exception:
         pass
@@ -168,12 +175,12 @@ def predict_traffic_sign(
     m_type_lower = model_type.strip().lower()
     if "no aug" in m_type_lower or "no_aug" in m_type_lower or "baseline cnn" in m_type_lower:
         model = get_cnn_no_aug_model()
-        cfg = get_model_preprocessing_config()
+        cfg = get_model_preprocessing_config("custom_no_aug")
         processed_tensor = prepare_image_pipeline(img_rgb, target_size=IMAGE_SIZE, preprocessing_config=cfg)
         probs = model.predict(processed_tensor, verbose=0)[0]
     elif "mobilenet" in m_type_lower:
         model = get_mobilenet_model()
-        cfg = get_model_preprocessing_config()
+        cfg = get_model_preprocessing_config("mobilenet_no_aug")
         processed_tensor = prepare_image_pipeline(img_rgb, target_size=IMAGE_SIZE, preprocessing_config=cfg)
         raw_probs = model.predict(processed_tensor, verbose=0)[0]
         if float(raw_probs.max()) < 0.20:
@@ -193,7 +200,7 @@ def predict_traffic_sign(
     else:
         # Default: Custom CNN (Aug)
         model = get_cnn_model()
-        cfg = get_model_preprocessing_config()
+        cfg = get_model_preprocessing_config("custom_aug")
         processed_tensor = prepare_image_pipeline(img_rgb, target_size=IMAGE_SIZE, preprocessing_config=cfg)
         probs = model.predict(processed_tensor, verbose=0)[0]
 
