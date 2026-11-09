@@ -1,0 +1,26 @@
+{
+    "dataset_path": "C:\\Downloads\\sigange\\data\\raw\\GTSRB\\Train",
+    "is_sample_dataset": false,
+    "num_classes": 43,
+    "model_type": "mobilenet",
+    "augmented": false,
+    "trained_timestamp": "2026-11-10 01:01:41",
+    "epochs_run": 5,
+    "final_train_acc": 0.7869,
+    "final_val_acc": 0.0383,
+    "preprocessing_config": {
+        "model_type": "mobilenet",
+        "augment": false,
+        "use_clahe": true,
+        "use_gamma": false,
+        "use_unsharp": false,
+        "norm_type": "minmax",
+        "target_size": [
+            32,
+            32
+        ],
+        "train_mean": null,
+        "train_std": null,
+        "sampling_method": "none"
+    }
+}

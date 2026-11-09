@@ -206,7 +206,10 @@ with nav_tabs[1]:
             else:
                 img_array = img_input
 
-            res = predict_traffic_sign(img_array, model_type=selected_model, auto_crop=auto_crop)
+            try:
+                res = predict_traffic_sign(img_array, model_type=selected_model, auto_crop=auto_crop)
+            except TypeError:
+                res = predict_traffic_sign(img_array, model_type=selected_model)
             render_alert(f"Dự đoán hoàn tất thành công sử dụng mô hình {selected_model}.", "success")
 
             st.markdown(f"""
@@ -592,17 +595,28 @@ with nav_tabs[3]:
     st.markdown("<div class='section-header'>4. Trực Quan Hóa Tương Tác Các Phép Tăng Cường (Interactive Playground)</div>", unsafe_allow_html=True)
     st.caption("Xem trực tiếp từng phép biến đổi tác động lên ảnh biển báo mẫu GTSRB:")
 
-    # Interactive demo
-    demo_candidates = [
-        ROOT_DIR / "data" / "raw" / "GTSRB" / "Train" / "1",
-        ROOT_DIR / "data" / "raw" / "GTSRB" / "Train" / "2",
-        ROOT_DIR / "data" / "raw" / "GTSRB" / "Train" / "00001",
-        ROOT_DIR / "data" / "sample" / "1",
+    sample_options = {
+        "Biển Giới hạn tốc độ 50 km/h (Class 2)": 2,
+        "Biển Giới hạn tốc độ 80 km/h (Class 5)": 5,
+        "Biển Giới hạn tốc độ 30 km/h (Class 1)": 1,
+        "Biển Giới hạn tốc độ 100 km/h (Class 7)": 7,
+        "Biển Dừng lại STOP (Class 14)": 14,
+        "Biển Cấm đi ngược chiều (Class 17)": 17,
+        "Biển Cảnh báo nguy hiểm (Class 18)": 18,
+    }
+    sel_sign_name = st.selectbox("Chọn loại biển báo để thử nghiệm:", options=list(sample_options.keys()), index=0, key="sel_playground_sign")
+    target_class_id = sample_options[sel_sign_name]
+
+    # Load sign for selected class
+    cand_dirs = [
+        ROOT_DIR / "data" / "raw" / "GTSRB" / "Train" / str(target_class_id),
+        ROOT_DIR / "data" / "raw" / "GTSRB" / "Train" / f"{target_class_id:05d}",
+        ROOT_DIR / "data" / "sample" / str(target_class_id),
     ]
     sample_img = None
-    for cand in demo_candidates:
-        if cand.exists():
-            p_imgs = list(cand.glob("*.png")) + list(cand.glob("*.ppm")) + list(cand.glob("*.jpg"))
+    for c_dir in cand_dirs:
+        if c_dir.exists():
+            p_imgs = list(c_dir.glob("*.png")) + list(c_dir.glob("*.ppm")) + list(c_dir.glob("*.jpg"))
             if p_imgs:
                 loaded = cv2.imread(str(p_imgs[0]))
                 if loaded is not None:
@@ -613,7 +627,7 @@ with nav_tabs[3]:
         sample_img = np.full((64, 64, 3), 220, dtype=np.uint8)
         cv2.circle(sample_img, (32, 32), 26, (220, 30, 30), -1)
         cv2.circle(sample_img, (32, 32), 18, (255, 255, 255), -1)
-        cv2.putText(sample_img, "50", (16, 38), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
+        cv2.putText(sample_img, f"{target_class_id}", (16, 38), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 
     img_resized = resize_image(sample_img, (32, 32))
     img_clahe = apply_clahe(img_resized)

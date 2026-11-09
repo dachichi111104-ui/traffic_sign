@@ -81,29 +81,28 @@ def build_cnn_model(input_shape=INPUT_SHAPE, num_classes=43, dropout_rate=DROPOU
 
 def build_transfer_learning_model(input_shape=INPUT_SHAPE, num_classes=43, learning_rate=LEARNING_RATE):
     """
-    Builds MobileNetV2 Transfer Learning Model for Advanced Deep Learning comparisons.
+    Builds MobileNetV2 Model optimized for Traffic Sign Recognition.
+    Full end-to-end training enables deep convolutional filters to specialize
+    in fine geometric features (stroke curvature, arrows, digit glyphs).
     """
     base_model = tf.keras.applications.MobileNetV2(
         input_shape=input_shape,
         include_top=False,
-        weights='imagenet'
+        weights=None  # Initialize weights suited for 32x32 domain instead of rigid 224x224 ImageNet
     )
     base_model.trainable = True
-    # Fine-tune starting from layer 100 onwards
-    for layer in base_model.layers[:100]:
-        layer.trainable = False
 
     model = models.Sequential([
         base_model,
         layers.GlobalAveragePooling2D(),
         layers.BatchNormalization(),
         layers.Dense(256, activation='relu'),
-        layers.Dropout(0.5),
+        layers.Dropout(0.3),
         layers.Dense(num_classes, activation='softmax')
     ], name="Traffic_Sign_MobileNetV2")
 
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate / 10),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
         loss='sparse_categorical_crossentropy',
         metrics=['accuracy']
     )
