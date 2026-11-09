@@ -303,6 +303,10 @@ def train_cnn(
             y_train_aug.append(lbl)
             X_train_aug.append(augment_single_image(img))
             y_train_aug.append(lbl)
+            # Extra adverse augmentation for speed limit classes (0,1,2,3,4,5,7,8) and minority classes
+            if int(lbl) in [0, 1, 2, 3, 4, 5, 7, 8, 19, 21, 24, 27, 29, 32, 41, 42]:
+                X_train_aug.append(augment_single_image(img))
+                y_train_aug.append(lbl)
         X_train_final = np.array(X_train_aug, dtype=np.uint8)
         y_train_final = np.array(y_train_aug, dtype=int)
     else:

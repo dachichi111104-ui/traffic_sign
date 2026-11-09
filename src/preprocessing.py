@@ -583,13 +583,15 @@ def split_data(
 
 def augment_single_image(image: np.ndarray) -> np.ndarray:
     """
-    Applies realistic random data augmentation FOR TRAINING DATA ONLY:
-    - Perspective transform (camera tilt simulation)
-    - Rotation (-12 to +12 degrees)
-    - Translation (shift ±3 px)
-    - Brightness/contrast scaling (simulates day/night/glare)
-    - Motion blur or Gaussian blur (weather & speed blur simulation)
-    - Cutout / Random erasing (occlusion simulation)
+    Data Augmentation 2.0 (Train-Time Injection of 6 Real-World Corruptions):
+    1. Geometric: Perspective Warp, Rotation (-12° to +12°), Translation (±3 px)
+    2. 6 Real-World Optical/Weather Corruptions:
+       - Gaussian Blur (rain/fog/defocus blur)
+       - Motion Blur (vehicle velocity / camera shake)
+       - Low Light (night/dusk/tunnel lighting with gamma decay)
+       - Overexposure (direct afternoon sun glare / saturation)
+       - Sensor Noise (high ISO camera noise)
+       - Partial Occlusion (cutout / tree branches)
     NO horizontal flip (preserves directional traffic sign meanings).
     """
     h, w = image.shape[:2]
@@ -601,8 +603,8 @@ def augment_single_image(image: np.ndarray) -> np.ndarray:
     else:
         aug = np.clip(image, 0, 255).astype(np.uint8)
     
-    # 1. Perspective Transform (25% chance)
-    if np.random.rand() < 0.25:
+    # 1. Perspective Transform (30% chance)
+    if np.random.rand() < 0.30:
         aug = apply_perspective_transform(aug, max_warp=0.10)
 
     # 2. Random rotation (-12 to +12 degrees)
@@ -610,26 +612,54 @@ def augment_single_image(image: np.ndarray) -> np.ndarray:
     M_rot = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
     aug = cv2.warpAffine(aug, M_rot, (w, h), borderMode=cv2.BORDER_REFLECT_101)
     
-    # 3. Random shift
+    # 3. Random translation shift (±3 px)
     tx = np.random.randint(-3, 4)
     ty = np.random.randint(-3, 4)
     M_shift = np.float32([[1, 0, tx], [0, 1, ty]])
     aug = cv2.warpAffine(aug, M_shift, (w, h), borderMode=cv2.BORDER_REFLECT_101)
 
-    # 4. Random brightness/contrast adjustment (uint8)
-    brightness_factor = np.random.uniform(0.8, 1.2)
-    aug = np.clip(aug.astype(np.float32) * brightness_factor, 0, 255).astype(np.uint8)
-
-    # 5. Motion blur or Gaussian blur (30% chance)
-    if np.random.rand() < 0.3:
+    # 4. Condition A: Blur (Motion blur or Gaussian blur) - 40% chance
+    if np.random.rand() < 0.40:
         if np.random.rand() < 0.5:
-            aug = cv2.GaussianBlur(aug, (3, 3), 0)
+            # Gaussian blur (defocus / fog / rain)
+            ksize = int(np.random.choice([3, 5]))
+            sigma = float(np.random.uniform(0.6, 1.6))
+            aug = cv2.GaussianBlur(aug, (ksize, ksize), sigma)
         else:
-            aug = apply_motion_blur(aug, kernel_size=3)
+            # Motion blur (high speed)
+            ksize = int(np.random.choice([3, 5]))
+            kernel = np.zeros((ksize, ksize))
+            if np.random.rand() > 0.5:
+                kernel[int((ksize - 1) / 2), :] = np.ones(ksize)
+            else:
+                np.fill_diagonal(kernel, 1)
+            kernel /= float(ksize)
+            aug = cv2.filter2D(aug, -1, kernel)
 
-    # 6. Cutout / Random Erasing (20% chance)
-    if np.random.rand() < 0.20:
-        aug = apply_cutout(aug, n_holes=1, length=6)
+    # 5. Condition B: Lighting Variations (Low light OR Overexposure) - 35% chance
+    if np.random.rand() < 0.35:
+        if np.random.rand() < 0.6:
+            # Low light / Night / Tunnel
+            factor = float(np.random.uniform(0.35, 0.75))
+            gamma = float(np.random.uniform(0.6, 0.9))
+            inv_gamma = 1.0 / gamma
+            lut = np.array([((i / 255.0) ** inv_gamma) * 255 for i in range(256)]).astype(np.uint8)
+            aug = cv2.LUT(np.clip(aug.astype(np.float32) * factor, 0, 255).astype(np.uint8), lut)
+        else:
+            # Overexposure / Direct sun glare
+            factor = float(np.random.uniform(1.2, 1.6))
+            aug = np.clip(aug.astype(np.float32) * factor, 0, 255).astype(np.uint8)
+
+    # 6. Condition C: Sensor Noise (Dashcam ISO grain) - 25% chance
+    if np.random.rand() < 0.25:
+        noise_std = float(np.random.uniform(6.0, 16.0))
+        noise = np.random.normal(0, noise_std, aug.shape)
+        aug = np.clip(aug.astype(np.float32) + noise, 0, 255).astype(np.uint8)
+
+    # 7. Condition D: Partial Occlusion / Cutout - 25% chance
+    if np.random.rand() < 0.25:
+        hole_len = int(np.random.randint(5, 9))
+        aug = apply_cutout(aug, n_holes=1, length=hole_len)
     
     if is_float_unit:
         return (aug.astype(np.float32) / 255.0).astype(image.dtype)
