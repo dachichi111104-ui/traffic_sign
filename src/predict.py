@@ -115,7 +115,8 @@ def get_model_preprocessing_config() -> Dict:
 
 def predict_traffic_sign(
     image_input: Union[str, Path, np.ndarray, bytes],
-    model_type: str = "Custom CNN"
+    model_type: str = "Custom CNN",
+    auto_crop: bool = True
 ) -> Dict:
     """
     Inference pipeline:
@@ -124,8 +125,8 @@ def predict_traffic_sign(
     """
     img_rgb = load_image(image_input)
     
-    # 1. Automatic Traffic Sign Detection & Cropping if image is a full-scene photo (>120px)
-    if img_rgb.shape[0] > 120 or img_rgb.shape[1] > 120:
+    # 1. Automatic Traffic Sign Detection & Cropping if image is a full-scene photo (>120px) and auto_crop is enabled
+    if auto_crop and (img_rgb.shape[0] > 120 or img_rgb.shape[1] > 120):
         try:
             cropped_candidate, bbox = detect_and_crop_traffic_sign(img_rgb)
             if bbox is not None:
