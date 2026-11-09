@@ -12,7 +12,7 @@ from tensorflow.keras import layers, models, callbacks
 from src.config import (
     CNN_MODEL_PATH, CNN_CUSTOM_NO_AUG_PATH, CNN_MOBILENET_NO_AUG_PATH,
     CNN_CUSTOM_AUG_PATH, CNN_MOBILENET_AUG_PATH,
-    CLASS_MAPPING_PATH, TRAINING_HISTORY_PATH, MODEL_METADATA_PATH, RESULT_DIR,
+    CLASS_MAPPING_PATH, TRAINING_HISTORY_PATH, MODEL_METADATA_PATH, RESULT_DIR, MODEL_DIR,
     TRAINING_ACCURACY_PATH, TRAINING_LOSS_PATH,
     INPUT_SHAPE, BATCH_SIZE, EPOCHS, LEARNING_RATE, DROPOUT_RATE,
     GTSRB_CLASSES, RANDOM_STATE, TEST_RATIO, VAL_RATIO
@@ -333,10 +333,11 @@ def train_cnn(
         logger.info("Building Custom CNN with BatchNormalization...")
         model = build_cnn_model(input_shape=INPUT_SHAPE, num_classes=num_classes)
 
-    # 8. Callbacks
+    # 8. Callbacks with isolated training checkpoint path (prevents Windows file lock conflicts with Streamlit)
     target_model_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_ckpt_path = target_model_path.parent / f"{target_model_path.stem}_training.keras"
     checkpoint_cb = callbacks.ModelCheckpoint(
-        str(target_model_path), save_best_only=True, monitor='val_loss', mode='min'
+        str(temp_ckpt_path), save_best_only=True, monitor='val_loss', mode='min'
     )
     early_stopping_cb = callbacks.EarlyStopping(
         monitor='val_loss', patience=8, restore_best_weights=True
@@ -403,9 +404,19 @@ def train_cnn(
     with open(MODEL_METADATA_PATH, 'w', encoding='utf-8') as f:
         json.dump(metadata, f, indent=4, ensure_ascii=False)
 
+    # Ensure target model receives the best checkpoint
+    import shutil
+    if temp_ckpt_path.exists():
+        shutil.copyfile(temp_ckpt_path, target_model_path)
+        try:
+            temp_ckpt_path.unlink()
+        except Exception:
+            pass
+    else:
+        model.save(str(target_model_path))
+
     # If this is Custom CNN with Augmentation, also ensure default CNN_MODEL_PATH is updated
     if model_type == "custom" and augment:
-        import shutil
         if target_model_path.exists() and target_model_path != CNN_MODEL_PATH:
             shutil.copyfile(target_model_path, CNN_MODEL_PATH)
 
