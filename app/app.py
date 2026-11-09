@@ -261,7 +261,7 @@ with nav_tabs[1]:
                     
                     crop_mode_cam = st.radio(
                         "Phương thức xử lý vùng biển báo:",
-                        options=["🎯 Tự động phát hiện (Auto-detect)", "✂️ Cắt thủ công (Manual Crop)", "🖼️ Giữ nguyên ảnh gốc (No Crop)"],
+                        options=["Tự động phát hiện (Auto-detect)", "Cắt thủ công (Manual Crop)", "Giữ nguyên ảnh gốc (No Crop)"],
                         index=0,
                         horizontal=True,
                         key="crop_mode_cam"
@@ -271,7 +271,7 @@ with nav_tabs[1]:
                     h_c, w_c = cam_np.shape[:2]
                     img_to_predict = cam_img
                     
-                    if crop_mode_cam == "🎯 Tự động phát hiện (Auto-detect)":
+                    if crop_mode_cam == "Tự động phát hiện (Auto-detect)":
                         cropped_img, bbox = detect_and_crop_traffic_sign(cam_np)
                         if bbox is not None:
                             st.success(f"Đã phát hiện biển báo: x={bbox[0]}, y={bbox[1]}, w={bbox[2]}, h={bbox[3]}")
@@ -279,7 +279,7 @@ with nav_tabs[1]:
                             st.image(img_to_predict, caption="Ảnh biển báo sau khi cắt tự động", width=160)
                         else:
                             st.warning("Chưa tự động tách được viền biển báo. Hãy chuyển sang 'Cắt thủ công' ở trên.")
-                    elif crop_mode_cam == "✂️ Cắt thủ công (Manual Crop)":
+                    elif crop_mode_cam == "Cắt thủ công (Manual Crop)":
                         c_cs1, c_cs2 = st.columns(2)
                         with c_cs1:
                             y_range_c = st.slider("Vị trí Chiều Dọc (% Y)", 0, 100, (15, 85), step=1, key="slider_y_crop_cam")
@@ -293,7 +293,7 @@ with nav_tabs[1]:
                         if y2_c > y1_c and x2_c > x1_c:
                             img_to_predict = Image.fromarray(cam_np[y1_c:y2_c, x1_c:x2_c])
                             st.image(img_to_predict, caption=f"Vùng cắt thủ công ({x2_c-x1_c}x{y2_c-y1_c} px)", width=160)
-                            st.success("✅ Vùng cắt này sẽ được sử dụng làm đầu vào dự đoán.")
+                            st.success("Vùng cắt này sẽ được sử dụng làm đầu vào dự đoán.")
                     else:
                         img_to_predict = cam_img
 
@@ -319,7 +319,7 @@ with nav_tabs[1]:
                 
                 crop_mode_up = st.radio(
                     "Phương thức xử lý vùng biển báo:",
-                    options=["🎯 Tự động phát hiện (Auto-detect)", "✂️ Cắt thủ công (Manual Crop)", "🖼️ Giữ nguyên ảnh gốc (No Crop)"],
+                    options=["Tự động phát hiện (Auto-detect)", "Cắt thủ công (Manual Crop)", "Giữ nguyên ảnh gốc (No Crop)"],
                     index=0,
                     horizontal=True,
                     key="crop_mode_up"
@@ -329,18 +329,18 @@ with nav_tabs[1]:
                 h_orig, w_orig = img_np.shape[:2]
                 img_final_up = up_img
                 
-                if crop_mode_up == "🎯 Tự động phát hiện (Auto-detect)":
+                if crop_mode_up == "Tự động phát hiện (Auto-detect)":
                     cropped_arr, bbox = detect_and_crop_traffic_sign(img_np)
                     if bbox is not None:
                         st.success(f"Đã phát hiện vùng biển báo: (Vị trí: x={bbox[0]}, y={bbox[1]}, kích thước: {bbox[2]}x{bbox[3]} px)")
                         img_final_up = Image.fromarray(cropped_arr)
                         st.image(img_final_up, caption="Vùng biển báo trích xuất tự động (Input cho Mô Hình)", width=180)
                     else:
-                        st.warning("Chưa tự động phát hiện vùng biển báo nổi bật. Vui lòng chuyển sang '✂️ Cắt thủ công' ở trên để kéo vùng chọn chính xác.")
+                        st.warning("Chưa tự động phát hiện vùng biển báo nổi bật. Vui lòng chuyển sang 'Cắt thủ công' ở trên để kéo vùng chọn chính xác.")
                         img_final_up = up_img
                 
-                elif crop_mode_up == "✂️ Cắt thủ công (Manual Crop)":
-                    st.info("💡 Kéo 2 thanh trượt bên dưới để khoanh vùng biển báo. Ảnh cắt sẽ hiển thị và tự động áp dụng ngay:")
+                elif crop_mode_up == "Cắt thủ công (Manual Crop)":
+                    st.info("Kéo 2 thanh trượt bên dưới để khoanh vùng biển báo. Ảnh cắt sẽ hiển thị và tự động áp dụng ngay:")
                     c_s1, c_s2 = st.columns(2)
                     with c_s1:
                         y_range = st.slider("Vị trí Chiều Dọc (Y min - Y max %)", 0, 100, (10, 90), step=1, key="slider_y_crop")
@@ -360,16 +360,16 @@ with nav_tabs[1]:
                         with col_m1:
                             st.image(img_final_up, caption=f"Ảnh cắt ({x2-x1}x{y2-y1} px)", width=160)
                         with col_m2:
-                            st.success("✅ Vùng cắt thủ công này đã được áp dụng trực tiếp cho mô hình!")
+                            st.success("Vùng cắt thủ công này đã được áp dụng trực tiếp cho mô hình!")
                             if st.button("Sử dụng ảnh cắt thủ công này", key="btn_use_manual_crop"):
                                 st.session_state["manual_crop_applied"] = True
-                                st.toast("Đã áp dụng ảnh cắt thủ công thành công!", icon="✂️")
+                                st.toast("Đã áp dụng ảnh cắt thủ công thành công!")
                     else:
                         st.error("Khoảng chọn không hợp lệ (Min phải nhỏ hơn Max).")
                 
                 else: # Giữ nguyên ảnh gốc
                     img_final_up = up_img
-                    st.info("ℹ️ Đang sử dụng toàn bộ ảnh gốc không cắt.")
+                    st.info("Đang sử dụng toàn bộ ảnh gốc không cắt.")
 
         with c_u2:
             if up_file is None:
