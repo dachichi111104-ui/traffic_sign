@@ -9,13 +9,24 @@ import logging
 
 import tensorflow as tf
 
-from src.config import (
-    CNN_MODEL_PATH, CNN_CUSTOM_AUG_PATH, CNN_MOBILENET_NO_AUG_PATH, CNN_MOBILENET_AUG_PATH,
-    SVM_MODEL_PATH, SVM_NO_AUG_PATH, SVM_AUG_PATH,
-    CLASS_MAPPING_PATH, GTSRB_CLASSES, IMAGE_SIZE, EXTERNAL_TEST_DIR, MODEL_METADATA_PATH
-)
-from src.preprocessing import prepare_image_pipeline, load_image, resize_image
-from src.feature_extraction import extract_hog_features
+try:
+    from src.config import (
+        CNN_MODEL_PATH, CNN_CUSTOM_AUG_PATH, CNN_CUSTOM_NO_AUG_PATH,
+        CNN_MOBILENET_NO_AUG_PATH, CNN_MOBILENET_AUG_PATH,
+        SVM_MODEL_PATH, SVM_NO_AUG_PATH, SVM_AUG_PATH,
+        CLASS_MAPPING_PATH, GTSRB_CLASSES, IMAGE_SIZE, EXTERNAL_TEST_DIR, MODEL_METADATA_PATH
+    )
+    from src.preprocessing import prepare_image_pipeline, load_image, resize_image
+    from src.feature_extraction import extract_hog_features
+except ImportError:
+    from config import (
+        CNN_MODEL_PATH, CNN_CUSTOM_AUG_PATH, CNN_CUSTOM_NO_AUG_PATH,
+        CNN_MOBILENET_NO_AUG_PATH, CNN_MOBILENET_AUG_PATH,
+        SVM_MODEL_PATH, SVM_NO_AUG_PATH, SVM_AUG_PATH,
+        CLASS_MAPPING_PATH, GTSRB_CLASSES, IMAGE_SIZE, EXTERNAL_TEST_DIR, MODEL_METADATA_PATH
+    )
+    from preprocessing import prepare_image_pipeline, load_image, resize_image
+    from feature_extraction import extract_hog_features
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -43,11 +54,15 @@ def get_cnn_no_aug_model():
     """Gets Custom CNN model without augmentation (baseline)."""
     global _CUSTOM_CNN_NO_AUG_MODEL
     if _CUSTOM_CNN_NO_AUG_MODEL is None:
-        target_path = CNN_CUSTOM_NO_AUG_PATH
+        target_path = CNN_CUSTOM_NO_AUG_PATH if CNN_CUSTOM_NO_AUG_PATH.exists() else CNN_MODEL_PATH
         if not target_path.exists():
             target_path = CNN_MODEL_PATH
-        logger.info(f"Loading Custom CNN (No Aug) model from {target_path}")
-        _CUSTOM_CNN_NO_AUG_MODEL = tf.keras.models.load_model(target_path)
+        try:
+            logger.info(f"Loading Custom CNN (No Aug) model from {target_path}")
+            _CUSTOM_CNN_NO_AUG_MODEL = tf.keras.models.load_model(target_path)
+        except Exception as e:
+            logger.warning(f"Could not load No Aug model: {e}. Falling back to primary CNN.")
+            _CUSTOM_CNN_NO_AUG_MODEL = get_cnn_model()
     return _CUSTOM_CNN_NO_AUG_MODEL
 
 
